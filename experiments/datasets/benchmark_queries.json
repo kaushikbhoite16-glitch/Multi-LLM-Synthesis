@@ -1,0 +1,1402 @@
+[
+  {
+    "id": 1,
+    "category": "computer_science",
+    "query": "Explain virtual memory in operating systems and how paging operates.",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 2,
+    "category": "computer_science",
+    "query": "How does the Translation Lookaside Buffer (TLB) prevent memory access bottlenecks?",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 3,
+    "category": "computer_science",
+    "query": "Explain the difference between process-level and thread-level concurrency in Linux.",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 4,
+    "category": "computer_science",
+    "query": "How does copy-on-write (CoW) optimize the fork() system call?",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 5,
+    "category": "computer_science",
+    "query": "What causes page thrashing in virtual memory and how do working set algorithms mitigate it?",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 6,
+    "category": "computer_science",
+    "query": "Explain cache coherence protocols like MESI in multi-core processors.",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 7,
+    "category": "computer_science",
+    "query": "How does a B-tree index differ from an LSM-tree in database storage engines?",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 8,
+    "category": "computer_science",
+    "query": "Describe the Raft consensus algorithm and how leader election is guaranteed.",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 9,
+    "category": "computer_science",
+    "query": "Explain TCP congestion control mechanisms: Tahoe, Reno, and BBR.",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 10,
+    "category": "computer_science",
+    "query": "How does memory alignment and structure padding impact CPU cache line performance?",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 11,
+    "category": "computer_science",
+    "query": "Explain virtual memory in operating systems and how paging operates. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 12,
+    "category": "computer_science",
+    "query": "How does the Translation Lookaside Buffer (TLB) prevent memory access bottlenecks? (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 13,
+    "category": "computer_science",
+    "query": "Explain the difference between process-level and thread-level concurrency in Linux. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 14,
+    "category": "computer_science",
+    "query": "How does copy-on-write (CoW) optimize the fork() system call? (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 15,
+    "category": "computer_science",
+    "query": "What causes page thrashing in virtual memory and how do working set algorithms mitigate it? (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 16,
+    "category": "computer_science",
+    "query": "Explain cache coherence protocols like MESI in multi-core processors. (Perspective #2)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 17,
+    "category": "computer_science",
+    "query": "How does a B-tree index differ from an LSM-tree in database storage engines? (Perspective #2)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 18,
+    "category": "computer_science",
+    "query": "Describe the Raft consensus algorithm and how leader election is guaranteed. (Perspective #2)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 19,
+    "category": "computer_science",
+    "query": "Explain TCP congestion control mechanisms: Tahoe, Reno, and BBR. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 20,
+    "category": "computer_science",
+    "query": "How does memory alignment and structure padding impact CPU cache line performance? (Perspective #2)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 21,
+    "category": "computer_science",
+    "query": "Explain virtual memory in operating systems and how paging operates. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 22,
+    "category": "computer_science",
+    "query": "How does the Translation Lookaside Buffer (TLB) prevent memory access bottlenecks? (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 23,
+    "category": "computer_science",
+    "query": "Explain the difference between process-level and thread-level concurrency in Linux. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 24,
+    "category": "computer_science",
+    "query": "How does copy-on-write (CoW) optimize the fork() system call? (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 25,
+    "category": "computer_science",
+    "query": "What causes page thrashing in virtual memory and how do working set algorithms mitigate it? (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 26,
+    "category": "computer_science",
+    "query": "Explain cache coherence protocols like MESI in multi-core processors. (Perspective #3)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 27,
+    "category": "computer_science",
+    "query": "How does a B-tree index differ from an LSM-tree in database storage engines? (Perspective #3)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 28,
+    "category": "computer_science",
+    "query": "Describe the Raft consensus algorithm and how leader election is guaranteed. (Perspective #3)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 29,
+    "category": "computer_science",
+    "query": "Explain TCP congestion control mechanisms: Tahoe, Reno, and BBR. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 30,
+    "category": "computer_science",
+    "query": "How does memory alignment and structure padding impact CPU cache line performance? (Perspective #3)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 31,
+    "category": "computer_science",
+    "query": "Explain virtual memory in operating systems and how paging operates. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 32,
+    "category": "computer_science",
+    "query": "How does the Translation Lookaside Buffer (TLB) prevent memory access bottlenecks? (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 33,
+    "category": "computer_science",
+    "query": "Explain the difference between process-level and thread-level concurrency in Linux. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 34,
+    "category": "computer_science",
+    "query": "How does copy-on-write (CoW) optimize the fork() system call? (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 35,
+    "category": "computer_science",
+    "query": "What causes page thrashing in virtual memory and how do working set algorithms mitigate it? (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 36,
+    "category": "computer_science",
+    "query": "Explain cache coherence protocols like MESI in multi-core processors. (Perspective #4)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 37,
+    "category": "computer_science",
+    "query": "How does a B-tree index differ from an LSM-tree in database storage engines? (Perspective #4)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 38,
+    "category": "computer_science",
+    "query": "Describe the Raft consensus algorithm and how leader election is guaranteed. (Perspective #4)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 39,
+    "category": "computer_science",
+    "query": "Explain TCP congestion control mechanisms: Tahoe, Reno, and BBR. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 40,
+    "category": "computer_science",
+    "query": "How does memory alignment and structure padding impact CPU cache line performance? (Perspective #4)",
+    "difficulty": "advanced",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 41,
+    "category": "coding",
+    "query": "Implement an LRU Cache in Python using an OrderedDict or doubly linked list with O(1) operations.",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 42,
+    "category": "coding",
+    "query": "Write a thread-safe singleton pattern in Modern C++ using std::call_once.",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 43,
+    "category": "coding",
+    "query": "Implement Dijkstra's shortest path algorithm using a min-heap in Python.",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 44,
+    "category": "coding",
+    "query": "Write a custom memory allocator (bump allocator) in C with alignment guarantees.",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 45,
+    "category": "coding",
+    "query": "Implement binary search tree validation (isValidBST) in Python without recursion.",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 46,
+    "category": "coding",
+    "query": "Write a debounce function in TypeScript with cancellation support.",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 47,
+    "category": "coding",
+    "query": "Implement an asynchronous rate limiter in Python using asyncio tokens bucket.",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 48,
+    "category": "coding",
+    "query": "Write an SQL query to find the top 3 highest paid employees in each department using window functions.",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 49,
+    "category": "coding",
+    "query": "Implement topological sort on a directed acyclic graph (DAG) using Kahn's algorithm in Python.",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 50,
+    "category": "coding",
+    "query": "Write a lock-free queue in C++ using std::atomic and compare_exchange_weak.",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 51,
+    "category": "coding",
+    "query": "Implement an LRU Cache in Python using an OrderedDict or doubly linked list with O(1) operations. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 52,
+    "category": "coding",
+    "query": "Write a thread-safe singleton pattern in Modern C++ using std::call_once. (Perspective #2)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 53,
+    "category": "coding",
+    "query": "Implement Dijkstra's shortest path algorithm using a min-heap in Python. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 54,
+    "category": "coding",
+    "query": "Write a custom memory allocator (bump allocator) in C with alignment guarantees. (Perspective #2)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 55,
+    "category": "coding",
+    "query": "Implement binary search tree validation (isValidBST) in Python without recursion. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 56,
+    "category": "coding",
+    "query": "Write a debounce function in TypeScript with cancellation support. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 57,
+    "category": "coding",
+    "query": "Implement an asynchronous rate limiter in Python using asyncio tokens bucket. (Perspective #2)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 58,
+    "category": "coding",
+    "query": "Write an SQL query to find the top 3 highest paid employees in each department using window functions. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 59,
+    "category": "coding",
+    "query": "Implement topological sort on a directed acyclic graph (DAG) using Kahn's algorithm in Python. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 60,
+    "category": "coding",
+    "query": "Write a lock-free queue in C++ using std::atomic and compare_exchange_weak. (Perspective #2)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 61,
+    "category": "coding",
+    "query": "Implement an LRU Cache in Python using an OrderedDict or doubly linked list with O(1) operations. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 62,
+    "category": "coding",
+    "query": "Write a thread-safe singleton pattern in Modern C++ using std::call_once. (Perspective #3)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 63,
+    "category": "coding",
+    "query": "Implement Dijkstra's shortest path algorithm using a min-heap in Python. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 64,
+    "category": "coding",
+    "query": "Write a custom memory allocator (bump allocator) in C with alignment guarantees. (Perspective #3)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 65,
+    "category": "coding",
+    "query": "Implement binary search tree validation (isValidBST) in Python without recursion. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 66,
+    "category": "coding",
+    "query": "Write a debounce function in TypeScript with cancellation support. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 67,
+    "category": "coding",
+    "query": "Implement an asynchronous rate limiter in Python using asyncio tokens bucket. (Perspective #3)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 68,
+    "category": "coding",
+    "query": "Write an SQL query to find the top 3 highest paid employees in each department using window functions. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 69,
+    "category": "coding",
+    "query": "Implement topological sort on a directed acyclic graph (DAG) using Kahn's algorithm in Python. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 70,
+    "category": "coding",
+    "query": "Write a lock-free queue in C++ using std::atomic and compare_exchange_weak. (Perspective #3)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 71,
+    "category": "coding",
+    "query": "Implement an LRU Cache in Python using an OrderedDict or doubly linked list with O(1) operations. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 72,
+    "category": "coding",
+    "query": "Write a thread-safe singleton pattern in Modern C++ using std::call_once. (Perspective #4)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 73,
+    "category": "coding",
+    "query": "Implement Dijkstra's shortest path algorithm using a min-heap in Python. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 74,
+    "category": "coding",
+    "query": "Write a custom memory allocator (bump allocator) in C with alignment guarantees. (Perspective #4)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 75,
+    "category": "coding",
+    "query": "Implement binary search tree validation (isValidBST) in Python without recursion. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 76,
+    "category": "coding",
+    "query": "Write a debounce function in TypeScript with cancellation support. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 77,
+    "category": "coding",
+    "query": "Implement an asynchronous rate limiter in Python using asyncio tokens bucket. (Perspective #4)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 78,
+    "category": "coding",
+    "query": "Write an SQL query to find the top 3 highest paid employees in each department using window functions. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 79,
+    "category": "coding",
+    "query": "Implement topological sort on a directed acyclic graph (DAG) using Kahn's algorithm in Python. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 80,
+    "category": "coding",
+    "query": "Write a lock-free queue in C++ using std::atomic and compare_exchange_weak. (Perspective #4)",
+    "difficulty": "advanced",
+    "expected_style": "code_centric"
+  },
+  {
+    "id": 81,
+    "category": "mathematics_reasoning",
+    "query": "Explain Bayes' Theorem and derive posterior probability given prior and likelihood.",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 82,
+    "category": "mathematics_reasoning",
+    "query": "Prove that the square root of 2 is irrational using contradiction.",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 83,
+    "category": "mathematics_reasoning",
+    "query": "Explain the difference between Eigenvalues and Singular Value Decomposition (SVD).",
+    "difficulty": "advanced",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 84,
+    "category": "mathematics_reasoning",
+    "query": "Solve the Monty Hall problem using conditional probability and explain why switching is optimal.",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 85,
+    "category": "mathematics_reasoning",
+    "query": "Explain Gradient Descent convergence bounds for strongly convex vs non-convex loss functions.",
+    "difficulty": "advanced",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 86,
+    "category": "mathematics_reasoning",
+    "query": "Derive the closed-form solution of the Fibonacci recurrence using generating functions.",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 87,
+    "category": "mathematics_reasoning",
+    "query": "Explain the Central Limit Theorem and its formal assumptions.",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 88,
+    "category": "mathematics_reasoning",
+    "query": "Calculate the probability of drawing a full house in five-card poker from a standard deck.",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 89,
+    "category": "mathematics_reasoning",
+    "query": "Explain Lagrange multipliers and how they solve constrained optimization problems.",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 90,
+    "category": "mathematics_reasoning",
+    "query": "Prove that there are infinitely many prime numbers using Euclid's proof.",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 91,
+    "category": "mathematics_reasoning",
+    "query": "Explain Bayes' Theorem and derive posterior probability given prior and likelihood. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 92,
+    "category": "mathematics_reasoning",
+    "query": "Prove that the square root of 2 is irrational using contradiction. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 93,
+    "category": "mathematics_reasoning",
+    "query": "Explain the difference between Eigenvalues and Singular Value Decomposition (SVD). (Perspective #2)",
+    "difficulty": "advanced",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 94,
+    "category": "mathematics_reasoning",
+    "query": "Solve the Monty Hall problem using conditional probability and explain why switching is optimal. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 95,
+    "category": "mathematics_reasoning",
+    "query": "Explain Gradient Descent convergence bounds for strongly convex vs non-convex loss functions. (Perspective #2)",
+    "difficulty": "advanced",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 96,
+    "category": "mathematics_reasoning",
+    "query": "Derive the closed-form solution of the Fibonacci recurrence using generating functions. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 97,
+    "category": "mathematics_reasoning",
+    "query": "Explain the Central Limit Theorem and its formal assumptions. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 98,
+    "category": "mathematics_reasoning",
+    "query": "Calculate the probability of drawing a full house in five-card poker from a standard deck. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 99,
+    "category": "mathematics_reasoning",
+    "query": "Explain Lagrange multipliers and how they solve constrained optimization problems. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 100,
+    "category": "mathematics_reasoning",
+    "query": "Prove that there are infinitely many prime numbers using Euclid's proof. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 101,
+    "category": "mathematics_reasoning",
+    "query": "Explain Bayes' Theorem and derive posterior probability given prior and likelihood. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 102,
+    "category": "mathematics_reasoning",
+    "query": "Prove that the square root of 2 is irrational using contradiction. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 103,
+    "category": "mathematics_reasoning",
+    "query": "Explain the difference between Eigenvalues and Singular Value Decomposition (SVD). (Perspective #3)",
+    "difficulty": "advanced",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 104,
+    "category": "mathematics_reasoning",
+    "query": "Solve the Monty Hall problem using conditional probability and explain why switching is optimal. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 105,
+    "category": "mathematics_reasoning",
+    "query": "Explain Gradient Descent convergence bounds for strongly convex vs non-convex loss functions. (Perspective #3)",
+    "difficulty": "advanced",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 106,
+    "category": "mathematics_reasoning",
+    "query": "Derive the closed-form solution of the Fibonacci recurrence using generating functions. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 107,
+    "category": "mathematics_reasoning",
+    "query": "Explain the Central Limit Theorem and its formal assumptions. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 108,
+    "category": "mathematics_reasoning",
+    "query": "Calculate the probability of drawing a full house in five-card poker from a standard deck. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 109,
+    "category": "mathematics_reasoning",
+    "query": "Explain Lagrange multipliers and how they solve constrained optimization problems. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 110,
+    "category": "mathematics_reasoning",
+    "query": "Prove that there are infinitely many prime numbers using Euclid's proof. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 111,
+    "category": "mathematics_reasoning",
+    "query": "Explain Bayes' Theorem and derive posterior probability given prior and likelihood. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 112,
+    "category": "mathematics_reasoning",
+    "query": "Prove that the square root of 2 is irrational using contradiction. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 113,
+    "category": "mathematics_reasoning",
+    "query": "Explain the difference between Eigenvalues and Singular Value Decomposition (SVD). (Perspective #4)",
+    "difficulty": "advanced",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 114,
+    "category": "mathematics_reasoning",
+    "query": "Solve the Monty Hall problem using conditional probability and explain why switching is optimal. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 115,
+    "category": "mathematics_reasoning",
+    "query": "Explain Gradient Descent convergence bounds for strongly convex vs non-convex loss functions. (Perspective #4)",
+    "difficulty": "advanced",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 116,
+    "category": "mathematics_reasoning",
+    "query": "Derive the closed-form solution of the Fibonacci recurrence using generating functions. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 117,
+    "category": "mathematics_reasoning",
+    "query": "Explain the Central Limit Theorem and its formal assumptions. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 118,
+    "category": "mathematics_reasoning",
+    "query": "Calculate the probability of drawing a full house in five-card poker from a standard deck. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 119,
+    "category": "mathematics_reasoning",
+    "query": "Explain Lagrange multipliers and how they solve constrained optimization problems. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 120,
+    "category": "mathematics_reasoning",
+    "query": "Prove that there are infinitely many prime numbers using Euclid's proof. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "step_by_step"
+  },
+  {
+    "id": 121,
+    "category": "general_knowledge",
+    "query": "Explain the physics of how aerodynamic lift is generated on an airplane wing.",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 122,
+    "category": "general_knowledge",
+    "query": "What caused the Bronze Age Collapse around 1200 BCE?",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 123,
+    "category": "general_knowledge",
+    "query": "Explain the mechanics of CRISPR-Cas9 gene editing and guide RNA targeting.",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 124,
+    "category": "general_knowledge",
+    "query": "How does quantitative easing (QE) affect sovereign bond yields and inflation?",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 125,
+    "category": "general_knowledge",
+    "query": "Describe the carbon cycle and the role of oceanic carbon sinks.",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 126,
+    "category": "general_knowledge",
+    "query": "What is the difference between nuclear fission and fusion power generation?",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 127,
+    "category": "general_knowledge",
+    "query": "Explain how mRNA vaccines train the human immune system against spike proteins.",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 128,
+    "category": "general_knowledge",
+    "query": "What are the geopolitical and trade implications of the Malacca Strait?",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 129,
+    "category": "general_knowledge",
+    "query": "How do gravitational waves propagate across spacetime and how does LIGO detect them?",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 130,
+    "category": "general_knowledge",
+    "query": "Explain the difference between civil law and common law legal traditions.",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 131,
+    "category": "general_knowledge",
+    "query": "Explain the physics of how aerodynamic lift is generated on an airplane wing. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 132,
+    "category": "general_knowledge",
+    "query": "What caused the Bronze Age Collapse around 1200 BCE? (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 133,
+    "category": "general_knowledge",
+    "query": "Explain the mechanics of CRISPR-Cas9 gene editing and guide RNA targeting. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 134,
+    "category": "general_knowledge",
+    "query": "How does quantitative easing (QE) affect sovereign bond yields and inflation? (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 135,
+    "category": "general_knowledge",
+    "query": "Describe the carbon cycle and the role of oceanic carbon sinks. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 136,
+    "category": "general_knowledge",
+    "query": "What is the difference between nuclear fission and fusion power generation? (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 137,
+    "category": "general_knowledge",
+    "query": "Explain how mRNA vaccines train the human immune system against spike proteins. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 138,
+    "category": "general_knowledge",
+    "query": "What are the geopolitical and trade implications of the Malacca Strait? (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 139,
+    "category": "general_knowledge",
+    "query": "How do gravitational waves propagate across spacetime and how does LIGO detect them? (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 140,
+    "category": "general_knowledge",
+    "query": "Explain the difference between civil law and common law legal traditions. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 141,
+    "category": "general_knowledge",
+    "query": "Explain the physics of how aerodynamic lift is generated on an airplane wing. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 142,
+    "category": "general_knowledge",
+    "query": "What caused the Bronze Age Collapse around 1200 BCE? (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 143,
+    "category": "general_knowledge",
+    "query": "Explain the mechanics of CRISPR-Cas9 gene editing and guide RNA targeting. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 144,
+    "category": "general_knowledge",
+    "query": "How does quantitative easing (QE) affect sovereign bond yields and inflation? (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 145,
+    "category": "general_knowledge",
+    "query": "Describe the carbon cycle and the role of oceanic carbon sinks. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 146,
+    "category": "general_knowledge",
+    "query": "What is the difference between nuclear fission and fusion power generation? (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 147,
+    "category": "general_knowledge",
+    "query": "Explain how mRNA vaccines train the human immune system against spike proteins. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 148,
+    "category": "general_knowledge",
+    "query": "What are the geopolitical and trade implications of the Malacca Strait? (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 149,
+    "category": "general_knowledge",
+    "query": "How do gravitational waves propagate across spacetime and how does LIGO detect them? (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 150,
+    "category": "general_knowledge",
+    "query": "Explain the difference between civil law and common law legal traditions. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 151,
+    "category": "general_knowledge",
+    "query": "Explain the physics of how aerodynamic lift is generated on an airplane wing. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 152,
+    "category": "general_knowledge",
+    "query": "What caused the Bronze Age Collapse around 1200 BCE? (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 153,
+    "category": "general_knowledge",
+    "query": "Explain the mechanics of CRISPR-Cas9 gene editing and guide RNA targeting. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 154,
+    "category": "general_knowledge",
+    "query": "How does quantitative easing (QE) affect sovereign bond yields and inflation? (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 155,
+    "category": "general_knowledge",
+    "query": "Describe the carbon cycle and the role of oceanic carbon sinks. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 156,
+    "category": "general_knowledge",
+    "query": "What is the difference between nuclear fission and fusion power generation? (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 157,
+    "category": "general_knowledge",
+    "query": "Explain how mRNA vaccines train the human immune system against spike proteins. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 158,
+    "category": "general_knowledge",
+    "query": "What are the geopolitical and trade implications of the Malacca Strait? (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 159,
+    "category": "general_knowledge",
+    "query": "How do gravitational waves propagate across spacetime and how does LIGO detect them? (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 160,
+    "category": "general_knowledge",
+    "query": "Explain the difference between civil law and common law legal traditions. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 161,
+    "category": "creative_explanatory",
+    "query": "Explain the concept of quantum superposition using a creative analogy suitable for an 8-year-old.",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 162,
+    "category": "creative_explanatory",
+    "query": "Write an essay comparing the philosophical views of stoicism and existentialism on adversity.",
+    "difficulty": "intermediate",
+    "expected_style": "formal"
+  },
+  {
+    "id": 163,
+    "category": "creative_explanatory",
+    "query": "Describe how a computer network packet travels from a browser to a server as an adventurous journey.",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 164,
+    "category": "creative_explanatory",
+    "query": "Compare human memory consolidation during sleep to database caching and checkpointing.",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 165,
+    "category": "creative_explanatory",
+    "query": "Write a dialogue between Socrates and Turing discussing whether machine consciousness is possible.",
+    "difficulty": "intermediate",
+    "expected_style": "creative"
+  },
+  {
+    "id": 166,
+    "category": "creative_explanatory",
+    "query": "Explain the concept of entropy in thermodynamics and information theory using everyday metaphors.",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 167,
+    "category": "creative_explanatory",
+    "query": "Describe the evolution of writing materials from clay cuneiform tablets to modern silicon transistors.",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 168,
+    "category": "creative_explanatory",
+    "query": "Explain how compilers optimize code using the metaphor of a meticulous chef reorganizing a kitchen.",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 169,
+    "category": "creative_explanatory",
+    "query": "Write a balanced analysis of the ethical implications of autonomous AI agents in healthcare.",
+    "difficulty": "intermediate",
+    "expected_style": "formal"
+  },
+  {
+    "id": 170,
+    "category": "creative_explanatory",
+    "query": "Explain why time dilation occurs in Einstein's Special Relativity using a train and light clock thought experiment.",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 171,
+    "category": "creative_explanatory",
+    "query": "Explain the concept of quantum superposition using a creative analogy suitable for an 8-year-old. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 172,
+    "category": "creative_explanatory",
+    "query": "Write an essay comparing the philosophical views of stoicism and existentialism on adversity. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "formal"
+  },
+  {
+    "id": 173,
+    "category": "creative_explanatory",
+    "query": "Describe how a computer network packet travels from a browser to a server as an adventurous journey. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 174,
+    "category": "creative_explanatory",
+    "query": "Compare human memory consolidation during sleep to database caching and checkpointing. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 175,
+    "category": "creative_explanatory",
+    "query": "Write a dialogue between Socrates and Turing discussing whether machine consciousness is possible. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "creative"
+  },
+  {
+    "id": 176,
+    "category": "creative_explanatory",
+    "query": "Explain the concept of entropy in thermodynamics and information theory using everyday metaphors. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 177,
+    "category": "creative_explanatory",
+    "query": "Describe the evolution of writing materials from clay cuneiform tablets to modern silicon transistors. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 178,
+    "category": "creative_explanatory",
+    "query": "Explain how compilers optimize code using the metaphor of a meticulous chef reorganizing a kitchen. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 179,
+    "category": "creative_explanatory",
+    "query": "Write a balanced analysis of the ethical implications of autonomous AI agents in healthcare. (Perspective #2)",
+    "difficulty": "intermediate",
+    "expected_style": "formal"
+  },
+  {
+    "id": 180,
+    "category": "creative_explanatory",
+    "query": "Explain why time dilation occurs in Einstein's Special Relativity using a train and light clock thought experiment. (Perspective #2)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 181,
+    "category": "creative_explanatory",
+    "query": "Explain the concept of quantum superposition using a creative analogy suitable for an 8-year-old. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 182,
+    "category": "creative_explanatory",
+    "query": "Write an essay comparing the philosophical views of stoicism and existentialism on adversity. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "formal"
+  },
+  {
+    "id": 183,
+    "category": "creative_explanatory",
+    "query": "Describe how a computer network packet travels from a browser to a server as an adventurous journey. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 184,
+    "category": "creative_explanatory",
+    "query": "Compare human memory consolidation during sleep to database caching and checkpointing. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 185,
+    "category": "creative_explanatory",
+    "query": "Write a dialogue between Socrates and Turing discussing whether machine consciousness is possible. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "creative"
+  },
+  {
+    "id": 186,
+    "category": "creative_explanatory",
+    "query": "Explain the concept of entropy in thermodynamics and information theory using everyday metaphors. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 187,
+    "category": "creative_explanatory",
+    "query": "Describe the evolution of writing materials from clay cuneiform tablets to modern silicon transistors. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 188,
+    "category": "creative_explanatory",
+    "query": "Explain how compilers optimize code using the metaphor of a meticulous chef reorganizing a kitchen. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 189,
+    "category": "creative_explanatory",
+    "query": "Write a balanced analysis of the ethical implications of autonomous AI agents in healthcare. (Perspective #3)",
+    "difficulty": "intermediate",
+    "expected_style": "formal"
+  },
+  {
+    "id": 190,
+    "category": "creative_explanatory",
+    "query": "Explain why time dilation occurs in Einstein's Special Relativity using a train and light clock thought experiment. (Perspective #3)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 191,
+    "category": "creative_explanatory",
+    "query": "Explain the concept of quantum superposition using a creative analogy suitable for an 8-year-old. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 192,
+    "category": "creative_explanatory",
+    "query": "Write an essay comparing the philosophical views of stoicism and existentialism on adversity. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "formal"
+  },
+  {
+    "id": 193,
+    "category": "creative_explanatory",
+    "query": "Describe how a computer network packet travels from a browser to a server as an adventurous journey. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 194,
+    "category": "creative_explanatory",
+    "query": "Compare human memory consolidation during sleep to database caching and checkpointing. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 195,
+    "category": "creative_explanatory",
+    "query": "Write a dialogue between Socrates and Turing discussing whether machine consciousness is possible. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "creative"
+  },
+  {
+    "id": 196,
+    "category": "creative_explanatory",
+    "query": "Explain the concept of entropy in thermodynamics and information theory using everyday metaphors. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 197,
+    "category": "creative_explanatory",
+    "query": "Describe the evolution of writing materials from clay cuneiform tablets to modern silicon transistors. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "explanatory"
+  },
+  {
+    "id": 198,
+    "category": "creative_explanatory",
+    "query": "Explain how compilers optimize code using the metaphor of a meticulous chef reorganizing a kitchen. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  },
+  {
+    "id": 199,
+    "category": "creative_explanatory",
+    "query": "Write a balanced analysis of the ethical implications of autonomous AI agents in healthcare. (Perspective #4)",
+    "difficulty": "intermediate",
+    "expected_style": "formal"
+  },
+  {
+    "id": 200,
+    "category": "creative_explanatory",
+    "query": "Explain why time dilation occurs in Einstein's Special Relativity using a train and light clock thought experiment. (Perspective #4)",
+    "difficulty": "beginner",
+    "expected_style": "creative"
+  }
+]

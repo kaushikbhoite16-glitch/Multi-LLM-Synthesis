@@ -1,0 +1,45 @@
+[
+  {
+    "method": "Baseline 1: Single LLM",
+    "quality_score": 8.95,
+    "cost": 0.000143,
+    "tokens": 325,
+    "latency_ms": 485,
+    "response": "Virtual memory is an essential operating system abstraction that gives every running application the perception of having dedicated, uninterrupted access to RAM.\n\n**How It Operates:**\n- **Virtual vs Physical Addresses**: Applications work strictly with virtual addresses. The hardware MMU (Memory Management Unit) maps these to physical RAM addresses.\n- **Page Table & TLB**: Translations are stored in hierarchical page tables. The TLB caches frequent mappings for single-cycle access.\n- **Demand Paging**: When an instruction references an unmapped page, the CPU triggers a page fault interrupt. The OS fetches the block from disk.\n\n**Significance:**\nIt ensures process protection, enables sharing of system libraries, and allows execution of massive software packages on constrained hardware."
+  },
+  {
+    "method": "Baseline 2: Best Response Selection",
+    "quality_score": 8.95,
+    "cost": 0.000665,
+    "tokens": 1325,
+    "latency_ms": 905,
+    "selected_model": "openai/gpt-4o-mini",
+    "response": "Virtual memory is an essential operating system abstraction that gives every running application the perception of having dedicated, uninterrupted access to RAM.\n\n**How It Operates:**\n- **Virtual vs Physical Addresses**: Applications work strictly with virtual addresses. The hardware MMU (Memory Management Unit) maps these to physical RAM addresses.\n- **Page Table & TLB**: Translations are stored in hierarchical page tables. The TLB caches frequent mappings for single-cycle access.\n- **Demand Paging**: When an instruction references an unmapped page, the CPU triggers a page fault interrupt. The OS fetches the block from disk.\n\n**Significance:**\nIt ensures process protection, enables sharing of system libraries, and allows execution of massive software packages on constrained hardware."
+  },
+  {
+    "method": "Baseline 3: Simple Multi-LLM Synthesis",
+    "quality_score": 9.14,
+    "cost": 0.005675,
+    "tokens": 1755,
+    "latency_ms": 1661,
+    "response": "### Virtual Memory in Operating Systems\n\nVirtual memory is a fundamental memory management technique that creates an illusion of a very large, contiguous address space for each process, abstracting physical RAM and secondary storage (swap/paging space).\n\n#### 1. Core Mechanisms\n- **Paging & Virtual Addresses**: Memory is divided into fixed-size chunks called **pages** (typically 4 KB). Physical memory is partitioned into matching **page frames**.\n- **Memory Management Unit (MMU)**: A hardware component that translates virtual addresses to physical addresses via page tables on every memory reference.\n- **Translation Lookaside Buffer (TLB)**: A high-speed hardware cache for page table entries to minimize lookup latency.\n\n#### 2. Key Benefits\n- **Process Isolation & Security**: Each process runs in its own isolated address space, preventing unauthorized memory access.\n- **Overcommitting Memory**: Allows programs larger than physical RAM to execute by swapping inactive pages to disk.\n- **Shared Memory & Copy-on-Write (CoW)**: Facilitates efficient memory sharing (e.g., shared libraries, fork()).\n\n#### 3. Page Faults & Thrashing\nWhen a page is accessed that is not in physical RAM, an MMU exception triggers a **Page Fault**. The OS kernel reads the page from disk into a frame. If physical memory is saturated and the system spends more time paging than computing, it enters **thrashing**."
+  },
+  {
+    "method": "Baseline 4: Evaluation-Guided Synthesis",
+    "quality_score": 9.14,
+    "cost": 0.005675,
+    "tokens": 1755,
+    "latency_ms": 1413,
+    "response": "### Virtual Memory in Operating Systems\n\nVirtual memory is a fundamental memory management technique that creates an illusion of a very large, contiguous address space for each process, abstracting physical RAM and secondary storage (swap/paging space).\n\n#### 1. Core Mechanisms\n- **Paging & Virtual Addresses**: Memory is divided into fixed-size chunks called **pages** (typically 4 KB). Physical memory is partitioned into matching **page frames**.\n- **Memory Management Unit (MMU)**: A hardware component that translates virtual addresses to physical addresses via page tables on every memory reference.\n- **Translation Lookaside Buffer (TLB)**: A high-speed hardware cache for page table entries to minimize lookup latency.\n\n#### 2. Key Benefits\n- **Process Isolation & Security**: Each process runs in its own isolated address space, preventing unauthorized memory access.\n- **Overcommitting Memory**: Allows programs larger than physical RAM to execute by swapping inactive pages to disk.\n- **Shared Memory & Copy-on-Write (CoW)**: Facilitates efficient memory sharing (e.g., shared libraries, fork()).\n\n#### 3. Page Faults & Thrashing\nWhen a page is accessed that is not in physical RAM, an MMU exception triggers a **Page Fault**. The OS kernel reads the page from disk into a frame. If physical memory is saturated and the system spends more time paging than computing, it enters **thrashing**."
+  },
+  {
+    "method": "Proposed System (Adaptive Synthesis)",
+    "quality_score": 9.22,
+    "cost": 0.009425,
+    "tokens": 2165,
+    "latency_ms": 1472,
+    "improvement_pct": 3.02,
+    "conflicts_count": 1,
+    "response": "### Virtual Memory: Architecture, Mechanisms, and Trade-offs\n\n**Virtual memory** is an essential operating system abstraction that decouples an application's logical address space from physical random-access memory (RAM). By seamlessly integrating physical memory with secondary storage (swap or paging files), it provides each running process with the illusion of an isolated, continuous, and expansive memory space.\n\n---\n\n#### 1. Core Architectural Pillars\n1. **Paging and Logical Segmentation**:\n   - **Pages & Frames**: The process address space is partitioned into uniform blocks called **virtual pages** (typically 4 KB, or 2 MB/1 GB for HugePages). Physical RAM is identically divided into matching **page frames**.\n   - **Page Tables**: Hierarchical data structures maintained by the OS kernel that record the mapping between virtual page numbers (VPN) and physical frame numbers (PFN).\n\n2. **Hardware-Assisted Translation (MMU & TLB)**:\n   - **Memory Management Unit (MMU)**: A dedicated hardware subsystem that performs address translation on every CPU instruction.\n   - **Translation Lookaside Buffer (TLB)**: An associative cache that stores the most recently accessed address translations, allowing typical memory references to resolve in a single clock cycle without multi-level page table traversals.\n\n3. **Demand Paging and Page Fault Handling**:\n   - Programs are loaded lazily: code and data pages are brought into physical RAM only upon initial reference.\n   - When an unmapped or swapped-out page is accessed, the MMU signals a hardware trap\u2014a **Page Fault**.\n   - The operating system interrupts process execution, reads the requested page from disk/SSD into an available RAM frame, updates the page table and TLB, and restarts the faulting instruction.\n\n---\n\n#### 2. Key System Benefits\n- **Hardware Protection & Isolation**: Processes cannot inspect or corrupt other processes' memory, establishing core operating system security boundaries.\n- **Memory Overcommit**: Systems can run workloads whose aggregate memory demand exceeds physical RAM capacity.\n- **Copy-on-Write (CoW) & Shared Libraries**: Common binaries (like `libc`) and `fork()` address spaces share identical physical pages in read-only mode, only allocating physical duplicates when a write is attempted.\n\n---\n\n#### 3. Performance Criticality: Thrashing & Mitigation\nWhen aggregate active memory requirements exceed available physical RAM, the operating system spends a disproportionate amount of time swapping pages in and out rather than executing instructions\u2014a pathological state called **thrashing**. Modern kernels combat this via:\n- **Working Set Models**: Monitoring process memory footprints to avoid over-scheduling.\n- **Heuristic Page Replacement**: Advanced variants of the Least Recently Used (LRU) algorithm, such as the Clock algorithm or multi-queue active/inactive lists."
+  }
+]
