@@ -16,11 +16,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./multi_llm.db")
     
     # Defaults
-    DEFAULT_EVALUATOR_MODEL: str = os.getenv("DEFAULT_EVALUATOR_MODEL", "google/gemini-2.0-flash-001")
-    DEFAULT_SYNTHESIS_MODEL: str = os.getenv("DEFAULT_SYNTHESIS_MODEL", "anthropic/claude-3.5-sonnet")
+    DEFAULT_EVALUATOR_MODEL: str = os.getenv("DEFAULT_EVALUATOR_MODEL", "openai/gpt-4o-mini")
+    DEFAULT_SYNTHESIS_MODEL: str = os.getenv("DEFAULT_SYNTHESIS_MODEL", "openai/gpt-4o-mini")
     DEFAULT_CANDIDATE_MODELS: List[str] = [
-        "anthropic/claude-3-haiku",
-        "google/gemini-2.0-flash-001",
+        "google/gemini-2.5-flash",
         "openai/gpt-4o-mini",
         "meta-llama/llama-3.1-8b-instruct"
     ]

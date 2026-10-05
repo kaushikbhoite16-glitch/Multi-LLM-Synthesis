@@ -46,7 +46,7 @@ class ResponseEvaluator:
         query: str,
         preferences: Optional[UserPreferenceSchema],
         response: NormalizedResponse,
-        evaluator_model: str = "google/gemini-2.0-flash-001"
+        evaluator_model: str = "openai/gpt-4o-mini"
     ) -> EvaluationResult:
         """
         Evaluates a single candidate response using structured semantic analysis.

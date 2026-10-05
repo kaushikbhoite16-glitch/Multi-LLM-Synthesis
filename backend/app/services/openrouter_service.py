@@ -10,6 +10,7 @@ from app.schemas.pydantic_models import NormalizedResponse
 # Standard pricing table per 1M tokens (input / output) for realistic cost calculations
 MODEL_PRICING_CATALOG = {
     "google/gemini-2.0-flash-001": {"input": 0.10, "output": 0.40, "provider": "Google"},
+    "google/gemini-2.5-flash": {"input": 0.075, "output": 0.30, "provider": "Google"},
     "google/gemini-flash-1.5": {"input": 0.075, "output": 0.30, "provider": "Google"},
     "openai/gpt-4o-mini": {"input": 0.15, "output": 0.60, "provider": "OpenAI"},
     "openai/gpt-4o": {"input": 2.50, "output": 10.00, "provider": "OpenAI"},

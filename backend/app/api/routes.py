@@ -41,8 +41,8 @@ router = APIRouter()
 # In-memory configured models pool with sensible defaults
 CONFIGURED_MODELS: List[ModelConfig] = [
     ModelConfig(
-        id="google/gemini-2.0-flash-001",
-        name="Gemini 2.0 Flash",
+        id="google/gemini-2.5-flash",
+        name="Gemini 2.5 Flash",
         provider="Google",
         role="candidate",
         enabled=True,

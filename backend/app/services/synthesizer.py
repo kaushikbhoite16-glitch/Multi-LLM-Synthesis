@@ -27,7 +27,7 @@ class SynthesizerService:
         query_id: int,
         query: str,
         structured_context: str,
-        synthesis_model: str = "anthropic/claude-3.5-sonnet",
+        synthesis_model: str = "openai/gpt-4o-mini",
         preferences: Optional[UserPreferenceSchema] = None
     ) -> SynthesisResult:
         """

@@ -29,7 +29,7 @@ class QueryAnalyzer:
     def __init__(self, openrouter_service: OpenRouterService):
         self.openrouter = openrouter_service
 
-    async def analyze(self, query: str, model: str = "google/gemini-2.0-flash-001") -> QueryAnalysisResult:
+    async def analyze(self, query: str, model: str = "openai/gpt-4o-mini") -> QueryAnalysisResult:
         """
         Analyzes the incoming query using LLM structured extraction, with deterministic heuristic fallback.
         """
