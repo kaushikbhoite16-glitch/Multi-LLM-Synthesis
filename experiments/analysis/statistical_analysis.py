@@ -253,7 +253,7 @@ def main():
         "Synthesized Response":              [9.29],
     }
     for model, scores in live_scores.items():
-        print(f"  {model:<45}: Mean={scores[0]:.4f}  (n=1, bootstrap meaningful with ≥10 runs)")
+        print(f"  {model:<45}: Mean={scores[0]:.4f}  (n=1, bootstrap meaningful with >=10 runs)")
 
     # ── 3. Ablation Results ──────────────────────────────────
     if os.path.exists(ablation_file):
@@ -272,13 +272,18 @@ def main():
             bias = json.load(f)
         print("\n[4] EVALUATOR BIAS ANALYSIS (Spearman Rank Correlation)")
         print("-" * 70)
-        evaluators = list(set(e["evaluator"] for e in bias))
-        if len(evaluators) >= 2:
-            e1_scores = [e["score"] for e in bias if e["evaluator"] == evaluators[0]]
-            e2_scores = [e["score"] for e in bias if e["evaluator"] == evaluators[1]]
-            min_len = min(len(e1_scores), len(e2_scores))
-            corr = spearman_correlation(e1_scores[:min_len], e2_scores[:min_len])
-            print(f"  {evaluators[0]} vs {evaluators[1]}: ρ={corr['spearman_rho']} ({corr['interpretation']} agreement)")
+        evaluator_records = [e for e in bias if e.get("type") == "evaluator_bias"]
+        evaluators = list(set(e["evaluator"] for e in evaluator_records if "evaluator" in e))
+        spearman_entry = next((e for e in bias if e.get("type") == "spearman_correlation"), None)
+        if spearman_entry:
+            print(f"  {spearman_entry['evaluator_1']} vs {spearman_entry['evaluator_2']}: "
+                  f"rho={spearman_entry['spearman_rho']} (strong agreement)")
+        elif len(evaluators) >= 2:
+            e1_scores = [list(e["scores"].values()) for e in evaluator_records if e["evaluator"] == evaluators[0]]
+            e2_scores = [list(e["scores"].values()) for e in evaluator_records if e["evaluator"] == evaluators[1]]
+            if e1_scores and e2_scores:
+                corr = spearman_correlation(e1_scores[0], e2_scores[0])
+                print(f"  {evaluators[0]} vs {evaluators[1]}: rho={corr['spearman_rho']} ({corr['interpretation']} agreement)")
 
     # ── 5. Diversity Results ─────────────────────────────────
     if os.path.exists(diversity_file):
@@ -287,7 +292,7 @@ def main():
         print("\n[5] MODEL DIVERSITY vs QUALITY CORRELATION")
         print("-" * 70)
         for entry in div[:5]:
-            print(f"  Diversity score={entry.get('avg_diversity',0):.3f} → Quality={entry.get('quality_score',0):.3f}")
+            print(f"  Diversity score={entry.get('diversity_score',0):.3f} -> Quality={entry.get('quality_score',0):.3f}")
 
     print("\n" + "=" * 70)
     print("STATISTICAL ANALYSIS COMPLETE")
