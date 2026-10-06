@@ -210,7 +210,7 @@ async def main():
     final_eval_svc = FinalEvaluator(evaluator)
 
     print("=" * 65)
-    print("MODEL DIVERSITY ANALYSIS — RQ6")
+    print("MODEL DIVERSITY ANALYSIS - RQ6")
     print("=" * 65)
     print("Comparing homogeneous vs heterogeneous model pools\n")
 
@@ -262,7 +262,7 @@ async def main():
 
     print("=" * 65)
 
-    # Correlation diversity → quality
+    # Correlation diversity -> quality
     all_div = [r["diversity_score"] for r in all_results]
     all_q   = [r["quality_score"] for r in all_results]
     if len(all_div) > 2:
@@ -273,7 +273,7 @@ async def main():
         std_d = math.sqrt(sum((d - mean_d)**2 for d in all_div) / (n - 1))
         std_q = math.sqrt(sum((q - mean_q)**2 for q in all_q) / (n - 1))
         pearson_r = cov / (std_d * std_q) if std_d * std_q > 0 else 0.0
-        print(f"\nPearson correlation (diversity → quality): r = {pearson_r:.4f}")
+        print(f"\nPearson correlation (diversity -> quality): r = {pearson_r:.4f}")
         interpretation = "positive" if pearson_r > 0.3 else ("negative" if pearson_r < -0.3 else "negligible")
         print(f"Interpretation: {interpretation} correlation")
 

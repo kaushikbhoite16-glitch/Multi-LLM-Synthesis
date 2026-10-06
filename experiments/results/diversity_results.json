@@ -1,0 +1,182 @@
+[
+  {
+    "pool_type": "Heterogeneous (OpenAI + Meta)",
+    "models": [
+      "openai/gpt-4o-mini",
+      "meta-llama/llama-3.1-8b-instruct"
+    ],
+    "query": "Explain virtual memory in operating systems.",
+    "diversity_score": 0.4988,
+    "pairwise_overlap": 0.5117,
+    "vocabulary_diversity": 0.2735,
+    "quality_score": 9.36,
+    "improvement_pct": 2.07,
+    "unique_claims": 2,
+    "n_contradictions": 0,
+    "consensus_level": "high",
+    "tokens": 3968,
+    "cost": 0.00107
+  },
+  {
+    "pool_type": "Heterogeneous (OpenAI + Meta)",
+    "models": [
+      "openai/gpt-4o-mini",
+      "meta-llama/llama-3.1-8b-instruct"
+    ],
+    "query": "What is the difference between a process and a thread?",
+    "diversity_score": 0.4904,
+    "pairwise_overlap": 0.5647,
+    "vocabulary_diversity": 0.3084,
+    "quality_score": 9.17,
+    "improvement_pct": 0.0,
+    "unique_claims": 2,
+    "n_contradictions": 0,
+    "consensus_level": "high",
+    "tokens": 3779,
+    "cost": 0.001022
+  },
+  {
+    "pool_type": "Heterogeneous (OpenAI + Meta)",
+    "models": [
+      "openai/gpt-4o-mini",
+      "meta-llama/llama-3.1-8b-instruct"
+    ],
+    "query": "Describe how a neural network learns through backpropagation.",
+    "diversity_score": 0.4527,
+    "pairwise_overlap": 0.5849,
+    "vocabulary_diversity": 0.2838,
+    "quality_score": 9.17,
+    "improvement_pct": 0.0,
+    "unique_claims": 2,
+    "n_contradictions": 0,
+    "consensus_level": "high",
+    "tokens": 3975,
+    "cost": 0.001077
+  },
+  {
+    "pool_type": "Heterogeneous (OpenAI + Meta)",
+    "models": [
+      "openai/gpt-4o-mini",
+      "meta-llama/llama-3.1-8b-instruct"
+    ],
+    "query": "What is a database index and why does it improve query performance?",
+    "diversity_score": 0.5625,
+    "pairwise_overlap": 0.416,
+    "vocabulary_diversity": 0.2977,
+    "quality_score": 9.36,
+    "improvement_pct": 4.0,
+    "unique_claims": 2,
+    "n_contradictions": 0,
+    "consensus_level": "high",
+    "tokens": 3704,
+    "cost": 0.000975
+  },
+  {
+    "pool_type": "Heterogeneous (OpenAI + Meta)",
+    "models": [
+      "openai/gpt-4o-mini",
+      "meta-llama/llama-3.1-8b-instruct"
+    ],
+    "query": "Explain the concept of recursion with a real-world analogy.",
+    "diversity_score": 0.6213,
+    "pairwise_overlap": 0.3578,
+    "vocabulary_diversity": 0.3312,
+    "quality_score": 9.17,
+    "improvement_pct": 0.0,
+    "unique_claims": 2,
+    "n_contradictions": 0,
+    "consensus_level": "high",
+    "tokens": 3370,
+    "cost": 0.000901
+  },
+  {
+    "pool_type": "Homogeneous (OpenAI \u00d7 2)",
+    "models": [
+      "openai/gpt-4o-mini",
+      "openai/gpt-4o-mini"
+    ],
+    "query": "Explain virtual memory in operating systems.",
+    "diversity_score": 0.3468,
+    "pairwise_overlap": 0.7239,
+    "vocabulary_diversity": 0.2882,
+    "quality_score": 9.05,
+    "improvement_pct": -0.55,
+    "unique_claims": 1,
+    "n_contradictions": 0,
+    "consensus_level": "high",
+    "tokens": 4012,
+    "cost": 0.001412
+  },
+  {
+    "pool_type": "Homogeneous (OpenAI \u00d7 2)",
+    "models": [
+      "openai/gpt-4o-mini",
+      "openai/gpt-4o-mini"
+    ],
+    "query": "What is the difference between a process and a thread?",
+    "diversity_score": 0.3526,
+    "pairwise_overlap": 0.7124,
+    "vocabulary_diversity": 0.2812,
+    "quality_score": 9.17,
+    "improvement_pct": -1.29,
+    "unique_claims": 1,
+    "n_contradictions": 0,
+    "consensus_level": "high",
+    "tokens": 3650,
+    "cost": 0.001289
+  },
+  {
+    "pool_type": "Homogeneous (OpenAI \u00d7 2)",
+    "models": [
+      "openai/gpt-4o-mini",
+      "openai/gpt-4o-mini"
+    ],
+    "query": "Describe how a neural network learns through backpropagation.",
+    "diversity_score": 0.3522,
+    "pairwise_overlap": 0.7044,
+    "vocabulary_diversity": 0.2687,
+    "quality_score": 9.17,
+    "improvement_pct": -2.24,
+    "unique_claims": 2,
+    "n_contradictions": 0,
+    "consensus_level": "high",
+    "tokens": 3961,
+    "cost": 0.001402
+  },
+  {
+    "pool_type": "Homogeneous (OpenAI \u00d7 2)",
+    "models": [
+      "openai/gpt-4o-mini",
+      "openai/gpt-4o-mini"
+    ],
+    "query": "What is a database index and why does it improve query performance?",
+    "diversity_score": 0.4074,
+    "pairwise_overlap": 0.6409,
+    "vocabulary_diversity": 0.3049,
+    "quality_score": 9.17,
+    "improvement_pct": 0.0,
+    "unique_claims": 1,
+    "n_contradictions": 0,
+    "consensus_level": "high",
+    "tokens": 3699,
+    "cost": 0.001288
+  },
+  {
+    "pool_type": "Homogeneous (OpenAI \u00d7 2)",
+    "models": [
+      "openai/gpt-4o-mini",
+      "openai/gpt-4o-mini"
+    ],
+    "query": "Explain the concept of recursion with a real-world analogy.",
+    "diversity_score": 0.4334,
+    "pairwise_overlap": 0.6119,
+    "vocabulary_diversity": 0.2986,
+    "quality_score": 9.17,
+    "improvement_pct": 0.0,
+    "unique_claims": 1,
+    "n_contradictions": 0,
+    "consensus_level": "high",
+    "tokens": 2659,
+    "cost": 0.000878
+  }
+]
