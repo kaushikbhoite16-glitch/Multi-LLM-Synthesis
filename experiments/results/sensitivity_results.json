@@ -1,0 +1,106 @@
+[
+  {
+    "type": "sensitivity",
+    "config": "Relevance=10%",
+    "rank_order": [
+      "meta-llama/llama-3.1-8b-instruct",
+      "openai/gpt-4o-mini"
+    ],
+    "scores": [
+      7.72,
+      7.26
+    ],
+    "rank_changed_vs_reference": false
+  },
+  {
+    "type": "sensitivity",
+    "config": "Relevance=20%",
+    "rank_order": [
+      "meta-llama/llama-3.1-8b-instruct",
+      "openai/gpt-4o-mini"
+    ],
+    "scores": [
+      7.71,
+      7.24
+    ],
+    "rank_changed_vs_reference": false
+  },
+  {
+    "type": "sensitivity",
+    "config": "Relevance=30%",
+    "rank_order": [
+      "meta-llama/llama-3.1-8b-instruct",
+      "openai/gpt-4o-mini"
+    ],
+    "scores": [
+      7.68,
+      7.22
+    ],
+    "rank_changed_vs_reference": false
+  },
+  {
+    "type": "sensitivity",
+    "config": "Relevance=40%",
+    "rank_order": [
+      "meta-llama/llama-3.1-8b-instruct",
+      "openai/gpt-4o-mini"
+    ],
+    "scores": [
+      7.67,
+      7.2
+    ],
+    "rank_changed_vs_reference": false
+  },
+  {
+    "type": "sensitivity",
+    "config": "Relevance=50%",
+    "rank_order": [
+      "meta-llama/llama-3.1-8b-instruct",
+      "openai/gpt-4o-mini"
+    ],
+    "scores": [
+      7.64,
+      7.18
+    ],
+    "rank_changed_vs_reference": false
+  },
+  {
+    "type": "sensitivity",
+    "config": "Correctness=50%",
+    "rank_order": [
+      "meta-llama/llama-3.1-8b-instruct",
+      "openai/gpt-4o-mini"
+    ],
+    "scores": [
+      7.7,
+      7.26
+    ],
+    "rank_changed_vs_reference": false
+  },
+  {
+    "type": "sensitivity",
+    "config": "Cost-Aware",
+    "rank_order": [
+      "meta-llama/llama-3.1-8b-instruct",
+      "openai/gpt-4o-mini"
+    ],
+    "scores": [
+      7.08,
+      5.34
+    ],
+    "rank_changed_vs_reference": false
+  },
+  {
+    "type": "sensitivity",
+    "config": "Quality-First",
+    "rank_order": [
+      "openai/gpt-4o-mini",
+      "meta-llama/llama-3.1-8b-instruct"
+    ],
+    "scores": [
+      9.09,
+      8.68
+    ],
+    "rank_changed_vs_reference": true
+  }
+]

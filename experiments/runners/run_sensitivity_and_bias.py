@@ -172,8 +172,8 @@ async def main():
         s1 = [evaluator_scores[e1].get(m, 0) for m in all_models]
         s2 = [evaluator_scores[e2].get(m, 0) for m in all_models]
         rho = spearman_rho(s1, s2)
-        print(f"\n  Spearman rank correlation ({e1} vs {e2}): ρ = {rho:.4f}")
-        print(f"  Evaluator agreement: {'strong (ρ>0.7)' if rho > 0.7 else ('moderate (0.4<ρ<0.7)' if rho > 0.4 else 'weak (ρ<0.4)')}")
+        print(f"\n  Spearman rank correlation ({e1} vs {e2}): rho = {rho:.4f}")
+        print(f"  Evaluator agreement: {'strong (rho>0.7)' if rho > 0.7 else ('moderate (0.4<rho<0.7)' if rho > 0.4 else 'weak (rho<0.4)')}")
         all_results.append({
             "type": "spearman_correlation",
             "evaluator_1": e1,

@@ -92,6 +92,12 @@ class ResponseEvaluator:
                         )
                         overall = round(overall, 2)
 
+                        criteria_dict = {
+                            crit: float(parsed.get(crit, 7.5))
+                            for crit in CRITERIA_DEFINITIONS.keys()
+                            if crit in parsed and isinstance(parsed[crit], (int, float, str)) and str(parsed[crit]).replace('.', '', 1).isdigit()
+                        }
+
                         return EvaluationResult(
                             response_id=response.response_id,
                             model=response.model,
@@ -105,8 +111,8 @@ class ResponseEvaluator:
                             conciseness=float(parsed.get("conciseness", 8.0)),
                             technical_depth=float(parsed.get("technical_depth", 8.0)),
                             overall_score=overall,
-                            reasoning=parsed.get("reasoning", "Semantic criteria evaluation completed."),
-                            criteria_breakdown=parsed
+                            reasoning=str(parsed.get("reasoning", "Semantic criteria evaluation completed.")),
+                            criteria_breakdown=criteria_dict
                         )
                 except Exception as e:
                     logger.warning(f"Evaluation parse attempt {attempt+1} failed: {e}")

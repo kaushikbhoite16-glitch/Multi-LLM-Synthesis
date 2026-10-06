@@ -1,0 +1,32 @@
+[
+  {
+    "type": "evaluator_bias",
+    "evaluator": "openai/gpt-4o-mini",
+    "rank_order": [
+      "meta-llama/llama-3.1-8b-instruct",
+      "openai/gpt-4o-mini"
+    ],
+    "scores": {
+      "meta-llama/llama-3.1-8b-instruct": 7.69,
+      "openai/gpt-4o-mini": 7.24
+    }
+  },
+  {
+    "type": "evaluator_bias",
+    "evaluator": "meta-llama/llama-3.1-8b-instruct",
+    "rank_order": [
+      "meta-llama/llama-3.1-8b-instruct",
+      "openai/gpt-4o-mini"
+    ],
+    "scores": {
+      "meta-llama/llama-3.1-8b-instruct": 7.69,
+      "openai/gpt-4o-mini": 7.24
+    }
+  },
+  {
+    "type": "spearman_correlation",
+    "evaluator_1": "openai/gpt-4o-mini",
+    "evaluator_2": "meta-llama/llama-3.1-8b-instruct",
+    "spearman_rho": 1.0
+  }
+]
