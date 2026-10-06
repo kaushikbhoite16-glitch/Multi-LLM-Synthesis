@@ -50,7 +50,7 @@ class ConflictAnalyzer:
         self,
         query: str,
         candidates: List[NormalizedResponse],
-        model: str = "google/gemini-2.0-flash-001"
+        model: str = "openai/gpt-4o-mini"
     ) -> ConflictAnalysisResult:
         """
         Extracts consensus, unique perspectives, and factual contradictions across candidate models.
