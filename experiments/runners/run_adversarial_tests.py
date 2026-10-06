@@ -168,9 +168,9 @@ async def run_adversarial_tests():
 
         if test_passed:
             passed += 1
-            status_str = "✓ PASS"
+            status_str = "[PASS]"
         else:
-            status_str = "✗ FAIL"
+            status_str = "[FAIL]"
 
         print(f"  Expected contradiction: {expected}")
         print(f"  Found contradiction   : {found_contradiction}")
@@ -179,7 +179,7 @@ async def run_adversarial_tests():
 
         if conflict_result.contradictions:
             for c in conflict_result.contradictions:
-                print(f"  → [{c.severity.upper()}] {c.claim_a!r} vs {c.claim_b!r}")
+                print(f"  -> [{c.severity.upper()}] {c.claim_a!r} vs {c.claim_b!r}")
 
         print(f"  Status: {status_str}")
 
@@ -197,12 +197,11 @@ async def run_adversarial_tests():
                 quality_score=8.0,
                 resource_penalty=0.0,
                 overall_score=8.0,
-                input_tokens=c.input_tokens,
-                output_tokens=c.output_tokens,
-                total_tokens=c.total_tokens,
                 cost=c.cost,
+                tokens=c.total_tokens,
                 latency_ms=c.latency_ms,
-                status="success"
+                criteria_scores={"relevance": 8.0, "correctness": 8.0, "completeness": 8.0, "clarity": 8.0},
+                reasoning="Test evaluation reasoning"
             ) for i, c in enumerate(candidate_responses)]
 
             context = ContextBuilder.build_structured_context(

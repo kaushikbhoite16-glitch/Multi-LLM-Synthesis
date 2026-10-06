@@ -1,0 +1,134 @@
+{
+  "summary": {
+    "passed": 6,
+    "total": 6,
+    "accuracy_pct": 100.0
+  },
+  "cases": [
+    {
+      "id": "ADV-001",
+      "query": "What is the time complexity of binary search?",
+      "description": "Classic complexity confusion",
+      "expected_contradiction": true,
+      "found_contradiction": true,
+      "n_contradictions": 1,
+      "consensus_level": "divergent",
+      "contradictions": [
+        {
+          "claim_a": "Binary search has O(log n) time complexity.",
+          "claim_b": "Binary search runs in O(n) time complexity since it may need to scan all elements in the worst case.",
+          "severity": "high"
+        }
+      ],
+      "test_passed": true,
+      "ground_truth": "O(log n)",
+      "false_claim_model": "model_b",
+      "synthesis_correct": true,
+      "synthesis_text": "Binary search is an efficient algorithm used to find the position of a target value within a sorted array. Its time complexity is O(log n), which means that with each comparison, the algorithm effectively halves the search space. This logarithmic behavior arises because the algorithm eliminates half of the remaining elements in the array during each step of the search process.\n\nTo elaborate, the process begins by comparing the target value to the middle element of the array. If the target value "
+    },
+    {
+      "id": "ADV-002",
+      "query": "In Python, is a list mutable or immutable?",
+      "description": "Mutability confusion",
+      "expected_contradiction": true,
+      "found_contradiction": true,
+      "n_contradictions": 2,
+      "consensus_level": "divergent",
+      "contradictions": [
+        {
+          "claim_a": "Python lists are mutable \u2014 you can add, remove, or modify elements after creation.",
+          "claim_b": "Python lists are immutable, similar to tuples. You cannot change them after creation.",
+          "severity": "high"
+        },
+        {
+          "claim_a": "Lists in Python are mutable data structures. Unlike tuples, they support in-place modification.",
+          "claim_b": "Python lists are immutable, similar to tuples. You cannot change them after creation.",
+          "severity": "high"
+        }
+      ],
+      "test_passed": true,
+      "ground_truth": "mutable",
+      "false_claim_model": "model_b",
+      "synthesis_correct": true,
+      "synthesis_text": "In Python, lists are mutable data structures. This means that you can modify them after their creation. Specifically, you can add, remove, or change elements within a list. For example, you can append new items, delete existing ones, or alter the value of an item at a specific index. This flexibility distinguishes lists from immutable data structures like tuples, which cannot be modified once they are created.\n\nHere\u2019s a brief overview of list mutability in Python:\n\n1. **Adding Elements**: You ca"
+    },
+    {
+      "id": "ADV-003",
+      "query": "What does HTTP stand for?",
+      "description": "Acronym contradiction",
+      "expected_contradiction": true,
+      "found_contradiction": true,
+      "n_contradictions": 1,
+      "consensus_level": "medium",
+      "contradictions": [
+        {
+          "claim_a": "HTTP stands for HyperText Transfer Protocol.",
+          "claim_b": "HTTP stands for HyperText Transmission Protocol.",
+          "severity": "high"
+        }
+      ],
+      "test_passed": true,
+      "ground_truth": "HyperText Transfer Protocol",
+      "false_claim_model": "model_b",
+      "synthesis_correct": true,
+      "synthesis_text": "HTTP stands for HyperText Transfer Protocol. It is a foundational protocol used for transmitting data over the web, enabling communication between web servers and clients (such as browsers). HTTP defines how messages are formatted and transmitted, as well as how web servers and browsers should respond to various commands. This protocol is essential for loading web pages, as it allows for the transfer of text, images, videos, and other multimedia content across the internet."
+    },
+    {
+      "id": "ADV-004",
+      "query": "Is Python interpreted or compiled?",
+      "description": "Execution model contradiction",
+      "expected_contradiction": true,
+      "found_contradiction": true,
+      "n_contradictions": 1,
+      "consensus_level": "medium",
+      "contradictions": [
+        {
+          "claim_a": "Python is a fully compiled language, similar to C or Java, which generates native machine code before execution.",
+          "claim_b": "Python is primarily interpreted, though CPython does compile source code to bytecode first before interpretation.",
+          "severity": "high"
+        }
+      ],
+      "test_passed": true,
+      "ground_truth": "interpreted (with bytecode compilation step)",
+      "false_claim_model": "model_b",
+      "synthesis_correct": true,
+      "synthesis_text": "Python is primarily an interpreted language, meaning that its code is executed line by line at runtime by the Python interpreter. However, it is important to note that Python does involve a compilation step: when you run a Python program, the source code is first compiled into bytecode, which is a lower-level representation of the code. This bytecode is then interpreted by the Python virtual machine.\n\nThe most common implementation of Python, known as CPython, follows this model. It compiles the"
+    },
+    {
+      "id": "ADV-005",
+      "query": "What is the default port for HTTPS?",
+      "description": "Port number contradiction",
+      "expected_contradiction": true,
+      "found_contradiction": true,
+      "n_contradictions": 1,
+      "consensus_level": "medium",
+      "contradictions": [
+        {
+          "claim_a": "HTTPS runs on port 80, which is shared with HTTP but uses SSL/TLS encryption.",
+          "claim_b": "The standard port for HTTPS is 443.",
+          "severity": "high"
+        }
+      ],
+      "test_passed": true,
+      "ground_truth": "443",
+      "false_claim_model": "model_b",
+      "synthesis_correct": true,
+      "synthesis_text": "The default port for HTTPS (Hypertext Transfer Protocol Secure) is **443**. This port is used for secure encrypted communication over the internet, utilizing SSL (Secure Sockets Layer) or TLS (Transport Layer Security) protocols to ensure data integrity and confidentiality. \n\nIn contrast, the default port for HTTP (Hypertext Transfer Protocol) is **80**, which does not provide encryption. Therefore, when establishing secure connections, web servers and browsers typically use port 443 for HTTPS t"
+    },
+    {
+      "id": "ADV-006",
+      "query": "Does quicksort have worst-case O(n^2) time complexity?",
+      "description": "Consensus case \u2014 no contradiction expected",
+      "expected_contradiction": false,
+      "found_contradiction": false,
+      "n_contradictions": 0,
+      "consensus_level": "high",
+      "contradictions": [],
+      "test_passed": true,
+      "ground_truth": "O(n^2) worst case, O(n log n) average",
+      "false_claim_model": null,
+      "synthesis_correct": null,
+      "synthesis_text": ""
+    }
+  ]
+}
