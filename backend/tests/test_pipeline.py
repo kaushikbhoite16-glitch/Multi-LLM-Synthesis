@@ -7,7 +7,7 @@ async def test_full_pipeline_orchestration():
     orchestrator = PipelineOrchestrator(db=None)
     req = PipelineRunRequest(
         query="Explain virtual memory in operating systems.",
-        models=["google/gemini-2.0-flash-001", "openai/gpt-4o-mini", "anthropic/claude-3-haiku"],
+        models=["google/gemini-2.5-flash", "openai/gpt-4o-mini", "meta-llama/llama-3.1-8b-instruct"],
         preferences=UserPreferenceSchema(scoring_mode="balanced")
     )
 

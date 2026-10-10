@@ -22,18 +22,22 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, isMock 
   return (
     <header className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+        <div className="flex items-center space-x-3.5 cursor-pointer group" onClick={() => setActiveTab('dashboard')}>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform duration-200">
             <Layers className="w-5 h-5 text-white" />
           </div>
-          <div>
+          <div className="flex flex-col justify-center">
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-lg text-white tracking-tight">Multi-LLM Synthesis</span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-sky-950 text-sky-400 border border-sky-800">
+              <span className="font-bold text-base sm:text-lg text-white tracking-tight leading-tight group-hover:text-sky-300 transition-colors">
+                Multi-LLM Synthesis
+              </span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-950/90 text-sky-400 border border-sky-800/80 shadow-xs">
                 Research v1.0
               </span>
             </div>
-            <p className="text-xs text-slate-400">Response-Level Evaluation & Adaptive Synthesis</p>
+            <p className="text-[11px] text-slate-400 leading-normal hidden sm:block">
+              Response-Level Evaluation & Adaptive Synthesis
+            </p>
           </div>
         </div>
 

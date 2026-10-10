@@ -4,8 +4,17 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 font-sans;
+    @apply bg-slate-950 text-slate-100 font-sans antialiased;
   }
+}
+
+/* Glassmorphism and Card Styling */
+.glass-card {
+  @apply bg-slate-900/70 backdrop-blur-md border border-slate-800/80 rounded-2xl shadow-xl transition-all duration-200;
+}
+
+.glass-card:hover {
+  @apply border-slate-700/80;
 }
 
 /* Custom scrollbars */
@@ -15,14 +24,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #090d16;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 3px;
+  background: #1e293b;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #334155;
 }
