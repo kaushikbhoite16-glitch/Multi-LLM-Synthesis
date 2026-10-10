@@ -20,28 +20,33 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, isMock 
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-3.5 cursor-pointer group" onClick={() => setActiveTab('dashboard')}>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform duration-200">
+    <header className="sticky top-0 z-50 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/80 shadow-lg shadow-black/20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        {/* Brand Logo & Title */}
+        <div 
+          className="flex items-center space-x-3 cursor-pointer select-none group shrink-0" 
+          onClick={() => setActiveTab('dashboard')}
+        >
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-indigo-600 flex items-center justify-center shadow-md shadow-sky-500/25 group-hover:scale-105 transition-transform duration-200">
             <Layers className="w-5 h-5 text-white" />
           </div>
           <div className="flex flex-col justify-center">
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-base sm:text-lg text-white tracking-tight leading-tight group-hover:text-sky-300 transition-colors">
+              <span className="font-bold text-sm sm:text-base text-white tracking-tight leading-none group-hover:text-sky-300 transition-colors">
                 Multi-LLM Synthesis
               </span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-950/90 text-sky-400 border border-sky-800/80 shadow-xs">
-                Research v1.0
+              <span className="text-[10px] font-semibold font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                v1.0
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-normal hidden sm:block">
-              Response-Level Evaluation & Adaptive Synthesis
+            <p className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5 hidden sm:block">
+              Response Evaluation & Adaptive Answer Synthesis
             </p>
           </div>
         </div>
 
-        <nav className="hidden lg:flex items-center space-x-1">
+        {/* Desktop Nav Items */}
+        <nav className="hidden lg:flex items-center space-x-1 overflow-x-auto no-scrollbar">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -49,36 +54,37 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, isMock 
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap ${
                   isActive
-                    ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/80'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-sky-400' : 'text-slate-400'}`} />
                 <span>{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        <div className="flex items-center space-x-3">
+        {/* Status Indicator Pill */}
+        <div className="flex items-center space-x-2 shrink-0">
           {isMock ? (
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-800/80 text-amber-300 text-xs font-mono">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              <span>SIMULATION / DEMO MODE</span>
+            <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>SIMULATION MODE</span>
             </div>
           ) : (
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 text-xs font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>OPENROUTER CONNECTED</span>
+            <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-mono font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>LIVE API CONNECTED</span>
             </div>
           )}
         </div>
       </div>
       
       {/* Mobile navigation tab strip */}
-      <div className="lg:hidden flex overflow-x-auto py-2 px-4 border-t border-slate-800 space-x-2 no-scrollbar">
+      <div className="lg:hidden flex overflow-x-auto py-2 px-4 border-t border-slate-800/80 space-x-1.5 no-scrollbar bg-slate-950/60">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -86,11 +92,11 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, isMock 
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs whitespace-nowrap ${
-                isActive ? 'bg-sky-500/20 text-sky-300' : 'text-slate-400'
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                isActive ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Icon className="w-3 h-3" />
+              <Icon className="w-3.5 h-3.5" />
               <span>{item.label}</span>
             </button>
           );
