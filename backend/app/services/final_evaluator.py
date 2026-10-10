@@ -20,7 +20,7 @@ class FinalEvaluator:
         synthesis: SynthesisResult,
         ranked_candidates: List[RankedResponse],
         preferences: Optional[UserPreferenceSchema] = None,
-        evaluator_model: str = "google/gemini-2.0-flash-001"
+        evaluator_model: str = "openai/gpt-4o-mini"
     ) -> FinalEvaluationResult:
         """
         Evaluates the final synthesized response under the exact same multi-criteria protocol

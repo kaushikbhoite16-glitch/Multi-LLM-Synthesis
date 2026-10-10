@@ -21,13 +21,12 @@ export const QueryPage: React.FC<QueryPageProps> = ({
 }) => {
   const [query, setQuery] = useState('Explain virtual memory in operating systems, paging mechanisms, and page fault handling.');
   const [selectedModels, setSelectedModels] = useState<string[]>([
-    'google/gemini-2.0-flash-001',
+    'google/gemini-2.5-flash',
     'openai/gpt-4o-mini',
-    'anthropic/claude-3-haiku',
     'meta-llama/llama-3.1-8b-instruct'
   ]);
-  const [evaluatorModel, setEvaluatorModel] = useState<string>('google/gemini-2.0-flash-001');
-  const [synthesisModel, setSynthesisModel] = useState<string>('anthropic/claude-3.5-sonnet');
+  const [evaluatorModel, setEvaluatorModel] = useState<string>('openai/gpt-4o-mini');
+  const [synthesisModel, setSynthesisModel] = useState<string>('openai/gpt-4o-mini');
   
   const [preferences, setPreferences] = useState<UserPreferences>({
     relevance_weight: 0.25,

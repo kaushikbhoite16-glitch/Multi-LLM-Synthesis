@@ -63,17 +63,6 @@ CONFIGURED_MODELS: List[ModelConfig] = [
         cost_per_1k_output=0.0006
     ),
     ModelConfig(
-        id="anthropic/claude-3-haiku",
-        name="Claude 3 Haiku",
-        provider="Anthropic",
-        role="candidate",
-        enabled=True,
-        max_tokens=1500,
-        temperature=0.7,
-        cost_per_1k_input=0.00025,
-        cost_per_1k_output=0.00125
-    ),
-    ModelConfig(
         id="meta-llama/llama-3.1-8b-instruct",
         name="Llama 3.1 8B",
         provider="Meta",
@@ -85,15 +74,15 @@ CONFIGURED_MODELS: List[ModelConfig] = [
         cost_per_1k_output=0.000055
     ),
     ModelConfig(
-        id="anthropic/claude-3.5-sonnet",
-        name="Claude 3.5 Sonnet",
-        provider="Anthropic",
+        id="openai/gpt-4o-mini",
+        name="GPT-4o Mini (Synthesizer)",
+        provider="OpenAI",
         role="synthesizer",
         enabled=True,
         max_tokens=2000,
         temperature=0.4,
-        cost_per_1k_input=0.003,
-        cost_per_1k_output=0.015
+        cost_per_1k_input=0.00015,
+        cost_per_1k_output=0.0006
     )
 ]
 

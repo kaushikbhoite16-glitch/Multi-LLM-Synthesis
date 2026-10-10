@@ -126,7 +126,7 @@ class ResponseEvaluator:
         query: str,
         preferences: Optional[UserPreferenceSchema],
         candidates: List[NormalizedResponse],
-        evaluator_model: str = "google/gemini-2.0-flash-001"
+        evaluator_model: str = "openai/gpt-4o-mini"
     ) -> List[EvaluationResult]:
         """Evaluates multiple candidate responses asynchronously in parallel"""
         tasks = [
