@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-slate-950 text-slate-100 font-sans antialiased;
+    background-color: #0b0f19;
   }
 }
 
@@ -24,7 +29,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -34,4 +39,12 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -7,7 +7,9 @@ import {
   QueryAnalysis,
   User,
   AuthResponse,
-  QuestionHistoryItem
+  QuestionHistoryItem,
+  AdminStats,
+  AdminUserItem
 } from '../types';
 
 const API_BASE = '/api';
@@ -157,5 +159,22 @@ export const apiService = {
 
   getExportUrl(format: 'json' | 'csv'): string {
     return `/api/export?format=${format}`;
+  },
+
+  // Administrator Endpoints
+  async getAdminStats(): Promise<AdminStats> {
+    const res = await apiClient.get<AdminStats>('/admin/stats');
+    return res.data;
+  },
+
+  async getAdminUsers(search?: string): Promise<AdminUserItem[]> {
+    const params = search ? { search } : {};
+    const res = await apiClient.get<AdminUserItem[]>('/admin/users', { params });
+    return res.data;
+  },
+
+  async toggleUserStatus(userId: number, isActive: boolean): Promise<{ message: string; user_id: number; is_active: boolean }> {
+    const res = await apiClient.patch(`/admin/users/${userId}/status`, { is_active: isActive });
+    return res.data;
   }
 };

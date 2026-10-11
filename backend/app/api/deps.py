@@ -42,3 +42,15 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+async def get_admin_user(
+    current_user: UserEntity = Depends(get_current_user)
+) -> UserEntity:
+    """Enforces administrator role; raises 403 Forbidden if not admin."""
+    if getattr(current_user, "role", "user") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator privileges required to access this resource."
+        )
+    return current_user
+

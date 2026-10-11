@@ -242,6 +242,7 @@ class UserProfileResponse(BaseModel):
     id: int
     email: Optional[str] = None
     full_name: Optional[str] = None
+    role: str = "user"
     is_active: bool = True
     created_at: Optional[str] = None
 
@@ -267,4 +268,23 @@ class QuestionHistoryItem(BaseModel):
     synthesized_preview: Optional[str] = None
     synthesized_score: Optional[float] = None
     candidate_count: int = 0
+
+class AdminUserItem(BaseModel):
+    id: int
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    role: str = "user"
+    is_active: bool = True
+    created_at: Optional[str] = None
+    query_count: int = 0
+
+class AdminStatsResponse(BaseModel):
+    total_users: int
+    total_queries: int
+    live_queries: int
+    simulation_queries: int
+    total_tokens: int
+    total_cost: float
+    recent_activity: List[Dict[str, Any]] = []
+
 

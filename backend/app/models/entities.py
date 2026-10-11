@@ -13,6 +13,7 @@ class User(Base):
     google_id = Column(String(255), nullable=True)
     reset_token = Column(String(255), nullable=True)
     reset_token_expiry = Column(DateTime, nullable=True)
+    role = Column(String(50), default="user")  # "user" or "admin"
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

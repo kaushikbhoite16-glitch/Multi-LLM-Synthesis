@@ -42,4 +42,8 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
 
+    # Administrator Initial Account
+    ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "admin@multilllm.ai")
+    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "Admin@SecurePass2025!")
+
 settings = Settings()

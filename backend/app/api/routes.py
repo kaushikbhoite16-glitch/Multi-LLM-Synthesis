@@ -8,7 +8,7 @@ from sqlalchemy import select, desc
 
 import uuid
 import datetime
-from app.api.deps import get_session, get_optional_user, get_current_user
+from app.api.deps import get_session, get_optional_user, get_current_user, get_admin_user
 from app.schemas.pydantic_models import (
     PipelineRunRequest,
     PipelineRunResponse,
@@ -28,7 +28,9 @@ from app.schemas.pydantic_models import (
     UserProfileResponse,
     AuthResponse,
     QuestionRenameRequest,
-    QuestionHistoryItem
+    QuestionHistoryItem,
+    AdminUserItem,
+    AdminStatsResponse
 )
 from app.services.pipeline import PipelineOrchestrator
 from app.services.openrouter_service import OpenRouterService, MODEL_PRICING_CATALOG
@@ -414,6 +416,7 @@ async def auth_signup(
             id=new_user.id,
             email=new_user.email,
             full_name=new_user.full_name,
+            role=getattr(new_user, "role", "user") or "user",
             is_active=new_user.is_active,
             created_at=str(new_user.created_at) if new_user.created_at else None
         )
@@ -441,6 +444,7 @@ async def auth_login(
             id=user.id,
             email=user.email,
             full_name=user.full_name,
+            role=getattr(user, "role", "user") or "user",
             is_active=user.is_active,
             created_at=str(user.created_at) if user.created_at else None
         )
@@ -464,6 +468,7 @@ async def auth_google(
             email=clean_email,
             full_name=req.full_name or clean_email.split("@")[0],
             google_id=req.google_id,
+            role="user",
             is_active=True
         )
         db.add(user)
@@ -481,6 +486,7 @@ async def auth_google(
             id=user.id,
             email=user.email,
             full_name=user.full_name,
+            role=getattr(user, "role", "user") or "user",
             is_active=user.is_active,
             created_at=str(user.created_at) if user.created_at else None
         )
@@ -543,6 +549,7 @@ async def get_me(
         id=current_user.id,
         email=current_user.email,
         full_name=current_user.full_name,
+        role=getattr(current_user, "role", "user") or "user",
         is_active=current_user.is_active,
         created_at=str(current_user.created_at) if current_user.created_at else None
     )
@@ -816,3 +823,125 @@ async def delete_question(
     await db.commit()
 
     return {"status": "success", "message": f"Question #{query_id} deleted successfully."}
+
+
+# ==========================================
+# Administrator-Only Endpoints
+# ==========================================
+
+@router.get("/admin/stats", response_model=AdminStatsResponse)
+async def admin_get_stats(
+    admin: UserEntity = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_session)
+):
+    """
+    Administrator: Aggregated platform activity, live vs simulation counts, token & genuine cost usage.
+    Secured by backend role-based access control.
+    """
+    from sqlalchemy import func
+
+    total_users = (await db.execute(select(func.count(UserEntity.id)))).scalar() or 0
+    total_queries = (await db.execute(select(func.count(QueryEntity.id)))).scalar() or 0
+    live_q = (await db.execute(select(func.count(QueryEntity.id)).where(QueryEntity.execution_mode == 'live'))).scalar() or 0
+    sim_q = (await db.execute(select(func.count(QueryEntity.id)).where(QueryEntity.execution_mode == 'simulation'))).scalar() or 0
+
+    token_res = await db.execute(select(func.sum(ModelRunEntity.total_tokens)))
+    total_tokens = token_res.scalar() or 0
+
+    cost_res = await db.execute(select(func.sum(ModelRunEntity.cost)))
+    total_cost = round(cost_res.scalar() or 0.0, 6)
+
+    # 10 Most recent queries
+    recent_res = await db.execute(
+        select(QueryEntity).order_by(desc(QueryEntity.created_at)).limit(10)
+    )
+    recent_queries = recent_res.scalars().all()
+    recent_activity = [
+        {
+            "id": q.id,
+            "title": q.title or q.query_text[:60],
+            "execution_mode": q.execution_mode or "live",
+            "created_at": str(q.created_at),
+            "user_id": q.user_id
+        }
+        for q in recent_queries
+    ]
+
+    return AdminStatsResponse(
+        total_users=total_users,
+        total_queries=total_queries,
+        live_queries=live_q,
+        simulation_queries=sim_q,
+        total_tokens=total_tokens,
+        total_cost=total_cost,
+        recent_activity=recent_activity
+    )
+
+
+@router.get("/admin/users", response_model=List[AdminUserItem])
+async def admin_list_users(
+    admin: UserEntity = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_session),
+    search: Optional[str] = FastAPIQuery(None)
+):
+    """
+    Administrator: List all registered user accounts with query counts and status.
+    Passwords and sensitive secrets are never exposed.
+    """
+    from sqlalchemy import func
+
+    stmt = select(UserEntity).order_by(desc(UserEntity.created_at))
+    res = await db.execute(stmt)
+    users = res.scalars().all()
+
+    result: List[AdminUserItem] = []
+    for u in users:
+        if search and search.strip():
+            term = search.strip().lower()
+            if term not in (u.email or "").lower() and term not in (u.full_name or "").lower():
+                continue
+
+        q_count_res = await db.execute(
+            select(func.count(QueryEntity.id)).where(QueryEntity.user_id == u.id)
+        )
+        q_count = q_count_res.scalar() or 0
+
+        result.append(AdminUserItem(
+            id=u.id,
+            email=u.email,
+            full_name=u.full_name,
+            role=getattr(u, "role", "user") or "user",
+            is_active=u.is_active,
+            created_at=str(u.created_at) if u.created_at else None,
+            query_count=q_count
+        ))
+
+    return result
+
+
+@router.patch("/admin/users/{user_id}/status")
+async def admin_toggle_user_status(
+    user_id: int,
+    payload: Dict[str, Any],
+    admin: UserEntity = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_session)
+):
+    """
+    Administrator: Enable or disable a user account.
+    Prevents self-deactivation of administrator account.
+    """
+    if user_id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot modify your own account status.")
+
+    res = await db.execute(select(UserEntity).where(UserEntity.id == user_id))
+    user = res.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    is_active = payload.get("is_active")
+    if is_active is not None:
+        user.is_active = bool(is_active)
+        await db.commit()
+
+    return {"message": f"User status updated successfully.", "user_id": user.id, "is_active": user.is_active}
+

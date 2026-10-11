@@ -147,8 +147,35 @@ export interface User {
   id: number;
   email?: string;
   full_name?: string;
+  role?: string;
   is_active: boolean;
   created_at?: string;
+}
+
+export interface AdminUserItem {
+  id: number;
+  email: string | null;
+  full_name: string | null;
+  role: string;
+  is_active: boolean;
+  created_at: string | null;
+  query_count: number;
+}
+
+export interface AdminStats {
+  total_users: number;
+  total_queries: number;
+  live_queries: number;
+  simulation_queries: number;
+  total_tokens: number;
+  total_cost: number;
+  recent_activity: Array<{
+    id: number;
+    title: string;
+    execution_mode: string;
+    created_at: string;
+    user_id: number | null;
+  }>;
 }
 
 export interface AuthResponse {

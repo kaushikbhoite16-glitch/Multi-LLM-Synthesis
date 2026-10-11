@@ -8,7 +8,20 @@ import { PreferenceControls } from '../components/PreferenceControls';
 import { ModelSelector } from '../components/ModelSelector';
 import { PipelineStepper, StepItem } from '../components/PipelineStepper';
 import { apiService } from '../services/api';
-import { Play, Loader2, Sparkles, HelpCircle, FileText, CheckCircle2 } from 'lucide-react';
+import {
+  Sparkles,
+  ArrowUp,
+  Loader2,
+  Sliders,
+  ChevronDown,
+  ChevronUp,
+  Cpu,
+  Zap,
+  Globe,
+  Layers,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
 
 interface QueryPageProps {
   availableModels: ModelConfig[];
@@ -19,7 +32,7 @@ export const QueryPage: React.FC<QueryPageProps> = ({
   availableModels,
   onExecutionComplete,
 }) => {
-  const [query, setQuery] = useState('Explain virtual memory in operating systems, paging mechanisms, and page fault handling.');
+  const [query, setQuery] = useState('');
   const [selectedModels, setSelectedModels] = useState<string[]>([
     'google/gemini-2.5-flash',
     'openai/gpt-4o-mini',
@@ -28,7 +41,8 @@ export const QueryPage: React.FC<QueryPageProps> = ({
   const [evaluatorModel, setEvaluatorModel] = useState<string>('openai/gpt-4o-mini');
   const [synthesisModel, setSynthesisModel] = useState<string>('openai/gpt-4o-mini');
   const [executionMode, setExecutionMode] = useState<'live' | 'simulation'>('simulation');
-  
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   const [preferences, setPreferences] = useState<UserPreferences>({
     relevance_weight: 0.25,
     correctness_weight: 0.25,
@@ -63,213 +77,253 @@ export const QueryPage: React.FC<QueryPageProps> = ({
 
   const [steps, setSteps] = useState<StepItem[]>(initialSteps);
 
-  const samplePrompts = [
+  const examplePrompts = [
     {
-      title: 'Operating Systems',
-      prompt: 'Explain virtual memory in operating systems, paging mechanisms, and page fault handling.'
+      title: 'Operating Systems & Architecture',
+      prompt: 'Explain virtual memory in operating systems, paging mechanisms, and page fault handling with a clear step-by-step example.'
     },
     {
-      title: 'Algorithms & Coding',
-      prompt: 'Implement an LRU Cache in Python using a doubly linked list with O(1) operations, and explain thread-safety.'
+      title: 'Concurrent Algorithms & Data Structures',
+      prompt: 'Implement an LRU Cache in Python using a doubly linked list with O(1) operations, and explain thread-safety mechanisms.'
     },
     {
-      title: 'Mathematics & Proof',
-      prompt: 'Explain Bayes Theorem and derive posterior probability given prior and likelihood with a clinical testing example.'
+      title: 'Probability & Scientific Inference',
+      prompt: 'Explain Bayes Theorem and derive posterior probability given prior and likelihood with a clinical diagnostic test example.'
     },
     {
-      title: 'Distributed Systems',
-      prompt: 'Explain the Raft consensus algorithm and how leader election and log replication prevent split-brain.'
+      title: 'Distributed Consensus & CAP Theorem',
+      prompt: 'Compare Raft and Paxos consensus algorithms: core phases, leader election, and split-brain resolution.'
     }
   ];
 
-  const handleToggleModel = (id: string) => {
-    if (selectedModels.includes(id)) {
-      if (selectedModels.length > 1) {
-        setSelectedModels(selectedModels.filter(m => m !== id));
-      }
-    } else {
-      setSelectedModels([...selectedModels, id]);
-    }
+  const updateStepStatus = (id: string, status: 'idle' | 'running' | 'completed' | 'error') => {
+    setSteps((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, status } : s))
+    );
   };
 
-  const handleExecute = async () => {
-    if (!query.trim()) return;
-    setIsLoading(true);
-    setError(null);
+  const handleRunPipeline = async () => {
+    if (!query.trim() || query.trim().length < 3) {
+      setError('Please enter a query of at least 3 characters.');
+      return;
+    }
 
-    // Progressive step simulation for feedback while backend pipeline runs
-    setSteps(initialSteps.map((s, idx) => ({ ...s, status: idx === 0 ? 'running' : 'idle' })));
+    if (selectedModels.length === 0) {
+      setError('Please select at least one candidate model.');
+      return;
+    }
+
+    setError(null);
+    setIsLoading(true);
+    setSteps(initialSteps.map((s) => ({ ...s, status: 'idle' })));
 
     try {
-      // Step simulation timers
-      const timer1 = setTimeout(() => {
-        setSteps(prev => prev.map((s, i) => i === 0 ? { ...s, status: 'completed' } : i === 1 ? { ...s, status: 'running' } : s));
-      }, 300);
+      updateStepStatus('query_analysis', 'running');
+      await new Promise((r) => setTimeout(r, 400));
+      updateStepStatus('query_analysis', 'completed');
+      updateStepStatus('generation', 'running');
 
-      const timer2 = setTimeout(() => {
-        setSteps(prev => prev.map((s, i) => i <= 1 ? { ...s, status: 'completed' } : i === 2 ? { ...s, status: 'running' } : s));
-      }, 700);
-
-      const timer3 = setTimeout(() => {
-        setSteps(prev => prev.map((s, i) => i <= 3 ? { ...s, status: 'completed' } : i === 4 ? { ...s, status: 'running' } : s));
-      }, 1200);
-
-      const res = await apiService.runPipeline({
-        query,
+      const result = await apiService.runPipeline({
+        query: query.trim(),
         models: selectedModels,
         evaluator_model: evaluatorModel,
         synthesis_model: synthesisModel,
-        preferences,
-        scoring_mode: preferences.scoring_mode,
+        preferences: preferences,
         execution_mode: executionMode
       });
 
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-
-      setSteps(initialSteps.map(s => ({ ...s, status: 'completed' })));
-      onExecutionComplete(res);
+      setSteps((prev) => prev.map((s) => ({ ...s, status: 'completed' })));
+      onExecutionComplete(result);
     } catch (err: any) {
-      console.error(err);
-      setError(err?.response?.data?.detail || err.message || 'Pipeline execution failed.');
-      setSteps(prev => prev.map(s => s.status === 'running' ? { ...s, status: 'error' } : s));
+      const errMsg = err?.response?.data?.detail || err.message || 'Pipeline execution failed.';
+      setError(errMsg);
+      setSteps((prev) =>
+        prev.map((s) => (s.status === 'running' ? { ...s, status: 'error' } : s))
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in duration-200">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            Query & Research Experiment Runner
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Configure multi-model parameters, set weighted criteria, and synthesize adaptive responses.
-          </p>
-        </div>
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleRunPipeline();
+    }
+  };
 
-        {/* Execution Mode Selector */}
-        <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 p-1 rounded-2xl">
+  return (
+    <div className="max-w-4xl mx-auto space-y-8 py-4 sm:py-8 animate-in fade-in duration-200">
+      {/* ChatGPT / Claude Style Welcome Header */}
+      <div className="text-center space-y-3">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-sky-500/20">
+          <Sparkles className="w-7 h-7 text-white" />
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          What would you like to synthesize today?
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
+          Query multiple frontier AI models simultaneously, evaluate criteria, detect contradictions, and synthesize an optimal answer.
+        </p>
+
+        {/* Mode Selector Pill */}
+        <div className="inline-flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 text-xs">
           <button
-            type="button"
             onClick={() => setExecutionMode('simulation')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
               executionMode === 'simulation'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-xs'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span>Simulation Mode</span>
+            Simulation (Mock)
           </button>
           <button
-            type="button"
             onClick={() => setExecutionMode('live')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
               executionMode === 'live'
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-xs'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>Live API Mode</span>
+            Live API (Real Gateway)
           </button>
         </div>
       </div>
 
-      {/* Main Query Input Card */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
-            <FileText className="w-4 h-4 text-sky-400" />
-            <span>Research Prompt / User Inquiry</span>
-          </label>
-          <span className="text-[11px] font-mono text-slate-400">{query.length} characters</span>
-        </div>
-
+      {/* Prominent Question Input Box (ChatGPT/Claude Inspired) */}
+      <div className="relative rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl focus-within:border-sky-500/60 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all p-4">
         <textarea
-          rows={3}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Enter a prompt to evaluate across models and synthesize (e.g. Explain virtual memory in operating systems)..."
-          className="w-full bg-slate-950 border border-slate-700/80 rounded-2xl p-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition leading-relaxed resize-none font-sans"
+          onKeyDown={handleKeyDown}
+          placeholder="Ask a complex question, challenge multiple LLMs, or request code synthesis... (Press Enter to run, Shift+Enter for new line)"
+          rows={3}
+          disabled={isLoading}
+          className="w-full bg-transparent text-slate-100 placeholder-slate-500 resize-none text-sm focus:outline-none min-h-[90px] max-h-[300px]"
         />
 
-        {/* Preset Sample Prompts */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          <span className="text-[11px] text-slate-400 font-medium">Quick Benchmarks:</span>
-          {samplePrompts.map((p, idx) => (
+        <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+          <div className="flex items-center space-x-2 text-slate-400">
+            <span className="font-mono text-[11px] hidden sm:inline">
+              Selected Models: {selectedModels.length}
+            </span>
+            <span className="hidden sm:inline">•</span>
+            <span className="text-[11px] font-mono">
+              Mode: <strong className={executionMode === 'live' ? 'text-emerald-400' : 'text-amber-400'}>{executionMode.toUpperCase()}</strong>
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-2">
             <button
-              key={idx}
-              type="button"
-              onClick={() => setQuery(p.prompt)}
-              className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/80 transition"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center space-x-1 px-3 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
             >
-              {p.title}
+              <Sliders className="w-3.5 h-3.5" />
+              <span className="text-[11px] hidden sm:inline">Configure</span>
+              {showAdvanced ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
-          ))}
+
+            <button
+              onClick={handleRunPipeline}
+              disabled={isLoading || !query.trim()}
+              className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-xs shadow-md shadow-sky-500/25 transition-all"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Synthesizing...</span>
+                </>
+              ) : (
+                <>
+                  <span>Run Analysis</span>
+                  <ArrowUp className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Model Selection Panel */}
-      <ModelSelector
-        availableModels={availableModels}
-        selectedModels={selectedModels}
-        onToggleModel={handleToggleModel}
-        evaluatorModel={evaluatorModel}
-        setEvaluatorModel={setEvaluatorModel}
-        synthesisModel={synthesisModel}
-        setSynthesisModel={setSynthesisModel}
-      />
-
-      {/* Preferences Controls */}
-      <PreferenceControls
-        preferences={preferences}
-        onChange={setPreferences}
-      />
-
-      {/* Live Pipeline Stepper */}
-      {isLoading && (
-        <PipelineStepper steps={steps} />
-      )}
-
-      {/* Error alert */}
       {error && (
-        <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
-          <strong>Execution Error:</strong> {error}
+        <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs flex items-center space-x-2.5">
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Execute Button */}
-      <div className="flex items-center justify-between pt-2">
-        <div className="text-xs text-slate-400 flex items-center space-x-1.5 font-mono">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Full pipeline tracking: query classification, multi-criteria scoring, context synthesis, validation</span>
+      {/* Stepper Pipeline Progress (Visible When Running) */}
+      {isLoading && (
+        <div className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-4 animate-in fade-in">
+          <div className="flex items-center space-x-2 text-sky-400 text-xs font-semibold">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Multi-Agent Research Pipeline In Progress...</span>
+          </div>
+          <PipelineStepper steps={steps} />
         </div>
+      )}
 
-        <button
-          type="button"
-          disabled={isLoading || !query.trim()}
-          onClick={handleExecute}
-          className="flex items-center space-x-2 px-8 py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-slate-950 font-bold text-sm shadow-xl shadow-sky-500/25 transition cursor-pointer"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Orchestrating Pipeline...</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4 fill-current" />
-              <span>Execute Multi-LLM Pipeline</span>
-            </>
-          )}
-        </button>
-      </div>
+      {/* Clickable Example Prompts (Claude / ChatGPT 2x2 Grid) */}
+      {!isLoading && (
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">
+            Explore Example Benchmarks
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {examplePrompts.map((p, idx) => (
+              <div
+                key={idx}
+                onClick={() => setQuery(p.prompt)}
+                className="p-4 rounded-2xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-slate-700 cursor-pointer transition-all group"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-semibold text-slate-200 group-hover:text-sky-300 transition-colors">
+                    {p.title}
+                  </span>
+                  <ArrowUp className="w-3.5 h-3.5 text-slate-500 group-hover:text-sky-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all rotate-45" />
+                </div>
+                <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                  {p.prompt}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Collapsible Advanced Options Section */}
+      {showAdvanced && (
+        <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-6 animate-in fade-in duration-150">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 className="text-sm font-semibold text-slate-200 flex items-center space-x-2">
+              <Sliders className="w-4 h-4 text-sky-400" />
+              <span>Multi-LLM Synthesis Configuration</span>
+            </h3>
+            <span className="text-[11px] text-slate-400 font-mono">Custom Param Tuning</span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ModelSelector
+              availableModels={availableModels}
+              selectedModels={selectedModels}
+              onToggleModel={(modelId: string) => {
+                setSelectedModels((prev) =>
+                  prev.includes(modelId) ? prev.filter((m) => m !== modelId) : [...prev, modelId]
+                );
+              }}
+              evaluatorModel={evaluatorModel}
+              setEvaluatorModel={setEvaluatorModel}
+              synthesisModel={synthesisModel}
+              setSynthesisModel={setSynthesisModel}
+            />
+
+            <PreferenceControls
+              preferences={preferences}
+              onChange={setPreferences}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

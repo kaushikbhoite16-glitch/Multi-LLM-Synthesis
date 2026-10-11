@@ -16,7 +16,10 @@ import {
   Check,
   RotateCcw,
   CheckCircle2,
-  TrendingUp
+  TrendingUp,
+  Cpu,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 interface FinalResultPageProps {
@@ -26,24 +29,29 @@ interface FinalResultPageProps {
 
 export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQuery }) => {
   const [activeTab, setActiveTab] = useState<'answer' | 'candidates' | 'evaluations' | 'conflicts' | 'context' | 'resources'>('answer');
-  const [copied, setCopied] = useState(false);
+  const [copiedAnswer, setCopiedAnswer] = useState(false);
+  const [copiedCandidateId, setCopiedCandidateId] = useState<number | null>(null);
 
   const handleCopyAnswer = () => {
     navigator.clipboard.writeText(result.synthesis.final_response);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedAnswer(true);
+    setTimeout(() => setCopiedAnswer(false), 2000);
+  };
+
+  const handleCopyCandidate = (id: number, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedCandidateId(id);
+    setTimeout(() => setCopiedCandidateId(null), 2000);
   };
 
   const finalScore = result.final_evaluation.overall_score;
   const bestCandScore = result.final_evaluation.best_candidate_score;
   const improvementPct = result.final_evaluation.improvement_pct;
 
-  const candidateTokens = result.candidate_responses.reduce((sum, c) => sum + c.total_tokens, 0);
-
   return (
-    <div className="space-y-6 max-w-6xl mx-auto animate-in fade-in duration-200">
+    <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in duration-200">
       {/* Top Banner with Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <div className="flex items-center space-x-2">
             <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-sky-950 text-sky-400 border border-sky-800 font-semibold">
@@ -56,7 +64,7 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
                   : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
               }`}
             >
-              {result.execution_mode === 'simulation' || result.is_mock ? 'SIMULATION MODE (MOCK)' : 'LIVE API (GENUINE)'}
+              {result.execution_mode === 'simulation' || result.is_mock ? 'SIMULATION MODE' : 'LIVE API (GENUINE)'}
             </span>
             <span className="text-xs text-slate-400 font-mono hidden md:inline">
               Domain: {result.analysis.domain} | Difficulty: {result.analysis.difficulty}
@@ -69,123 +77,166 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
 
         <button
           onClick={onNewQuery}
-          className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition"
+          className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition shrink-0"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>New Experiment</span>
+          <span>New Exploration</span>
         </button>
       </div>
 
       {/* KPI Cards Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-          <span className="text-slate-400 text-[10px] uppercase font-mono block">Synthesized Score</span>
-          <div className="flex items-baseline space-x-1 mt-1">
-            <span className="text-xl font-bold font-mono text-sky-400">{finalScore.toFixed(2)}</span>
-            <span className="text-xs text-slate-400 font-mono">/ 10</span>
+        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl">
+          <div className="flex items-center space-x-1 text-slate-400 text-xs mb-1">
+            <Award className="w-3.5 h-3.5 text-sky-400" />
+            <span>Master Score</span>
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Automated Multi-Criteria</div>
+          <div className="text-lg font-bold font-mono text-sky-400">
+            {finalScore.toFixed(2)}/10
+          </div>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-          <span className="text-slate-400 text-[10px] uppercase font-mono block">Improvement Delta</span>
-          <div className="flex items-baseline space-x-1 mt-1">
-            <span className={`text-xl font-bold font-mono ${improvementPct >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {improvementPct >= 0 ? `+${improvementPct.toFixed(1)}%` : `${improvementPct.toFixed(1)}%`}
-            </span>
+        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl">
+          <div className="flex items-center space-x-1 text-slate-400 text-xs mb-1">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Improvement</span>
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">vs Best Candidate</div>
+          <div className="text-lg font-bold font-mono text-emerald-400">
+            +{improvementPct.toFixed(1)}%
+          </div>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-          <span className="text-slate-400 text-[10px] uppercase font-mono block">Models Ensembled</span>
-          <div className="text-xl font-bold font-mono text-white mt-1">
-            {result.candidate_responses.length}
+        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl">
+          <div className="flex items-center space-x-1 text-slate-400 text-xs mb-1">
+            <Award className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Best Model</span>
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Parallel Queries</div>
+          <div className="text-lg font-bold font-mono text-indigo-400">
+            {bestCandScore.toFixed(2)}/10
+          </div>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-          <span className="text-slate-400 text-[10px] uppercase font-mono block">Token Footprint</span>
-          <div className="text-xl font-bold font-mono text-slate-200 mt-1">
+        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl">
+          <div className="flex items-center space-x-1 text-slate-400 text-xs mb-1">
+            <Coins className="w-3.5 h-3.5 text-amber-400" />
+            <span>Total Cost</span>
+          </div>
+          <div className="text-lg font-bold font-mono text-amber-400">
+            {result.execution_mode === 'simulation' || result.is_mock
+              ? '$0.00'
+              : `$${result.total_pipeline_cost.toFixed(5)}`}
+          </div>
+        </div>
+
+        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl">
+          <div className="flex items-center space-x-1 text-slate-400 text-xs mb-1">
+            <Layers className="w-3.5 h-3.5 text-purple-400" />
+            <span>Tokens</span>
+          </div>
+          <div className="text-lg font-bold font-mono text-purple-400">
             {result.total_pipeline_tokens.toLocaleString()}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">{candidateTokens} cand / {result.synthesis.total_tokens} synth</div>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-          <span className="text-slate-400 text-[10px] uppercase font-mono block">Pipeline Cost</span>
-          <div className="text-xl font-bold font-mono text-emerald-400 mt-1">
-            {result.execution_mode === 'simulation' || result.is_mock ? '$0.00000' : `$${result.total_pipeline_cost.toFixed(5)}`}
+        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl">
+          <div className="flex items-center space-x-1 text-slate-400 text-xs mb-1">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <span>Latency</span>
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">
-            {result.execution_mode === 'simulation' || result.is_mock ? 'Simulated (No Cost)' : 'Actual OpenRouter Bill'}
-          </div>
-        </div>
-
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
-          <span className="text-slate-400 text-[10px] uppercase font-mono block">Total Latency</span>
-          <div className="text-xl font-bold font-mono text-slate-300 mt-1">
+          <div className="text-lg font-bold font-mono text-slate-300">
             {(result.total_pipeline_latency_ms / 1000).toFixed(2)}s
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">End-to-End Pipeline</div>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-800 space-x-2 overflow-x-auto pb-1 text-xs">
-        {[
-          { id: 'answer', label: 'Final Master Answer', icon: Sparkles },
-          { id: 'candidates', label: `Candidate Responses (${result.candidate_responses.length})`, icon: Layers },
-          { id: 'evaluations', label: 'Evaluation Matrix', icon: Scale },
-          { id: 'conflicts', label: `Conflicts & Agreement (${result.conflicts.contradictions.length})`, icon: AlertTriangle },
-          { id: 'context', label: 'Synthesis Context (Viva View)', icon: FileCode },
-          { id: 'resources', label: 'Cost & Usage', icon: Coins },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center space-x-1.5 px-4 py-2.5 rounded-t-xl font-medium transition whitespace-nowrap ${
-                isActive
-                  ? 'bg-slate-800 text-sky-400 border-t-2 border-sky-400 font-semibold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Tabs Row */}
+      <div className="flex items-center space-x-1 border-b border-slate-800 pb-2 overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setActiveTab('answer')}
+          className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            activeTab === 'answer'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+          <span>Synthesized Answer</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('candidates')}
+          className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            activeTab === 'candidates'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+        >
+          <Scale className="w-3.5 h-3.5" />
+          <span>Candidate Responses ({result.candidate_responses.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('evaluations')}
+          className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            activeTab === 'evaluations'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+        >
+          <Award className="w-3.5 h-3.5" />
+          <span>Multi-Criteria Scores</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('conflicts')}
+          className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            activeTab === 'conflicts'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+        >
+          <AlertTriangle className="w-3.5 h-3.5" />
+          <span>Contradictions & Disagreements</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('context')}
+          className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            activeTab === 'context'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+        >
+          <FileCode className="w-3.5 h-3.5" />
+          <span>Structured Context</span>
+        </button>
       </div>
 
-      {/* Tab 1: Final Master Answer */}
+      {/* Tab 1: Prominent Final Synthesized Answer */}
       {activeTab === 'answer' && (
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
-                <Sparkles className="w-4 h-4" />
+        <div className="space-y-6">
+          <div className="rounded-3xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-base">Adaptive Synthesized Response</h3>
+                  <p className="text-xs text-slate-400">
+                    Engineered by master synthesizer <span className="font-mono text-sky-400">{result.synthesis.synthesis_model}</span>
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Adaptive Synthesized Response</h3>
-                <p className="text-xs text-slate-400 font-mono">
-                  Synthesizer: {result.synthesis.synthesis_model}
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-center space-x-2">
               <button
                 onClick={handleCopyAnswer}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-700 transition"
+                className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
               >
-                {copied ? (
+                {copiedAnswer ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400 font-medium">Copied!</span>
+                    <span className="text-emerald-400">Copied!</span>
                   </>
                 ) : (
                   <>
@@ -195,127 +246,88 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
                 )}
               </button>
             </div>
-          </div>
 
-          {/* Formatted Synthesized Text */}
-          <div className="prose prose-invert max-w-none text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-sans">
-            {result.synthesis.final_response}
-          </div>
-
-          {/* Final Evaluation Reasoning Card */}
-          <div className="bg-slate-950/60 rounded-xl p-4 border border-slate-800 text-xs space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-slate-300">Automated Evaluation Protocol Assessment:</span>
-              <span className="font-mono text-sky-400 font-bold">
-                Final Score: {finalScore.toFixed(2)}/10 vs Best Candidate ({result.final_evaluation.best_candidate_model}): {bestCandScore.toFixed(2)}/10
-              </span>
+            {/* Answer Text */}
+            <div className="prose prose-invert max-w-none text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-sans">
+              {result.synthesis.final_response}
             </div>
-            <p className="text-slate-400 leading-relaxed">
-              {result.final_evaluation.reasoning}
-            </p>
+
+            {/* Validation Reasoning Footer */}
+            {result.final_evaluation && (
+              <div className="mt-8 pt-5 border-t border-slate-800/80 bg-slate-950/40 -mx-6 -mb-6 p-6 rounded-b-3xl">
+                <div className="flex items-center space-x-2 text-xs font-semibold text-sky-400 mb-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Validation & Semantic Scoring Notes</span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  {result.final_evaluation.reasoning}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Tab 2: Candidate Responses Cards */}
+      {/* Tab 2: Individual Model Responses */}
       {activeTab === 'candidates' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {result.ranking.map((cand) => (
+          {result.candidate_responses.map((cand) => (
             <div
               key={cand.response_id}
-              className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4"
+              className="rounded-2xl bg-slate-900/80 border border-slate-800 p-5 flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                  <div>
-                    <div className="flex items-center space-x-1.5">
-                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800">
-                        Rank #{cand.rank}
-                      </span>
-                      <h4 className="font-semibold text-white text-xs">{cand.model}</h4>
-                    </div>
-                    <span className="text-[11px] text-slate-400 font-mono">{cand.provider}</span>
+                <div className="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Cpu className="w-4 h-4 text-sky-400" />
+                    <span className="font-semibold text-xs text-white">{cand.model}</span>
+                    <span className="text-[10px] text-slate-400 font-mono">({cand.provider})</span>
                   </div>
-                  <span className="text-sm font-bold font-mono text-sky-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-                    {cand.overall_score.toFixed(2)}/10
-                  </span>
+                  <button
+                    onClick={() => handleCopyCandidate(cand.response_id, cand.response_text)}
+                    className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                    title="Copy Model Response"
+                  >
+                    {copiedCandidateId === cand.response_id ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                  </button>
                 </div>
-
-                <div className="mt-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 font-mono text-[11px] text-slate-300 max-h-64 overflow-y-auto whitespace-pre-wrap leading-relaxed">
+                <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap max-h-80 overflow-y-auto no-scrollbar">
                   {cand.response_text}
-                </div>
+                </p>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-                <span>Tokens: {cand.tokens}</span>
-                <span className="text-emerald-400">${cand.cost.toFixed(5)}</span>
-                <span>{cand.latency_ms} ms</span>
+              <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
+                <span>Tokens: {cand.total_tokens}</span>
+                <span>Latency: {(cand.latency_ms / 1000).toFixed(2)}s</span>
+                <span>Cost: ${cand.cost.toFixed(5)}</span>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Tab 3: Evaluation Matrix */}
+      {/* Tab 3: Multi-Criteria Evaluations */}
       {activeTab === 'evaluations' && (
-        <ComparisonTable
-          ranking={result.ranking}
-          evaluations={result.evaluations}
-          synthesisScore={finalScore}
-        />
+        <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-5">
+          <ComparisonTable ranking={result.ranking} evaluations={result.evaluations} />
+        </div>
       )}
 
-      {/* Tab 4: Conflicts & Agreement */}
+      {/* Tab 4: Contradictions & Conflicts */}
       {activeTab === 'conflicts' && (
-        <ConflictViewer conflicts={result.conflicts} />
+        <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-5">
+          <ConflictViewer conflicts={result.conflicts} />
+        </div>
       )}
 
-      {/* Tab 5: Structured Context for Synthesis */}
+      {/* Tab 5: Structured Context */}
       {activeTab === 'context' && (
-        <StructuredContextViewer context={result.structured_context} />
-      )}
-
-      {/* Tab 6: Resource Usage Breakdown */}
-      {activeTab === 'resources' && (
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 space-y-5">
-          <h3 className="font-semibold text-white text-sm">Objective Resource Metrics Breakdown</h3>
-          <div className="overflow-x-auto rounded-xl border border-slate-800">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-800 bg-slate-950 text-slate-400 font-mono">
-                  <th className="py-2.5 px-3">STAGE / MODEL</th>
-                  <th className="py-2.5 px-3">ROLE</th>
-                  <th className="py-2.5 px-3 text-right">INPUT TOKENS</th>
-                  <th className="py-2.5 px-3 text-right">OUTPUT TOKENS</th>
-                  <th className="py-2.5 px-3 text-right">TOTAL TOKENS</th>
-                  <th className="py-2.5 px-3 text-right">COST ($)</th>
-                  <th className="py-2.5 px-3 text-right">LATENCY (MS)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
-                {result.candidate_responses.map((c) => (
-                  <tr key={c.response_id} className="hover:bg-slate-800/20">
-                    <td className="py-2.5 px-3 font-semibold text-slate-200">{c.model}</td>
-                    <td className="py-2.5 px-3 text-slate-400">Candidate</td>
-                    <td className="py-2.5 px-3 text-right text-slate-300">{c.input_tokens}</td>
-                    <td className="py-2.5 px-3 text-right text-slate-300">{c.output_tokens}</td>
-                    <td className="py-2.5 px-3 text-right text-slate-200 font-bold">{c.total_tokens}</td>
-                    <td className="py-2.5 px-3 text-right text-emerald-400">${c.cost.toFixed(5)}</td>
-                    <td className="py-2.5 px-3 text-right text-slate-400">{c.latency_ms}</td>
-                  </tr>
-                ))}
-                <tr className="bg-sky-950/20 font-semibold border-t-2 border-sky-800">
-                  <td className="py-2.5 px-3 text-sky-300">{result.synthesis.synthesis_model}</td>
-                  <td className="py-2.5 px-3 text-sky-400">Synthesizer</td>
-                  <td className="py-2.5 px-3 text-right text-slate-300">{result.synthesis.input_tokens}</td>
-                  <td className="py-2.5 px-3 text-right text-slate-300">{result.synthesis.output_tokens}</td>
-                  <td className="py-2.5 px-3 text-right text-sky-300 font-bold">{result.synthesis.total_tokens}</td>
-                  <td className="py-2.5 px-3 text-right text-emerald-400">${result.synthesis.cost.toFixed(5)}</td>
-                  <td className="py-2.5 px-3 text-right text-slate-300">{result.synthesis.latency_ms}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-5">
+          <StructuredContextViewer context={result.structured_context} />
         </div>
       )}
     </div>
