@@ -46,7 +46,8 @@ class ResponseEvaluator:
         query: str,
         preferences: Optional[UserPreferenceSchema],
         response: NormalizedResponse,
-        evaluator_model: str = "openai/gpt-4o-mini"
+        evaluator_model: str = "openai/gpt-4o-mini",
+        force_mock: bool = False
     ) -> EvaluationResult:
         """
         Evaluates a single candidate response using structured semantic analysis.
@@ -66,14 +67,15 @@ class ResponseEvaluator:
             {"role": "user", "content": user_prompt}
         ]
 
-        if self.openrouter.has_api_key():
+        if self.openrouter.has_api_key() and not force_mock:
             for attempt in range(2):
                 try:
                     eval_resp = await self.openrouter.generate_response(
                         model=evaluator_model,
                         messages=messages,
                         max_tokens=600,
-                        temperature=0.1
+                        temperature=0.1,
+                        force_mock=force_mock
                     )
                     if eval_resp.status == "success" and eval_resp.response_text:
                         raw = eval_resp.response_text.strip()
@@ -126,11 +128,12 @@ class ResponseEvaluator:
         query: str,
         preferences: Optional[UserPreferenceSchema],
         candidates: List[NormalizedResponse],
-        evaluator_model: str = "openai/gpt-4o-mini"
+        evaluator_model: str = "openai/gpt-4o-mini",
+        force_mock: bool = False
     ) -> List[EvaluationResult]:
         """Evaluates multiple candidate responses asynchronously in parallel"""
         tasks = [
-            self.evaluate_single(query, preferences, cand, evaluator_model)
+            self.evaluate_single(query, preferences, cand, evaluator_model, force_mock=force_mock)
             for cand in candidates
             if cand.status == "success" and cand.response_text
         ]

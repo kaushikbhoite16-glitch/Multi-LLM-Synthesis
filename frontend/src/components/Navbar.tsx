@@ -1,16 +1,21 @@
 import React from 'react';
-import { Layers, BarChart3, Sliders, Settings2, Cpu, Scale, UserCheck, Beaker } from 'lucide-react';
+import { Layers, BarChart3, Sliders, Settings2, Cpu, Scale, UserCheck, Beaker, History, LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface NavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isMock?: boolean;
+  onOpenAuth: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, isMock = true }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, isMock = true, onOpenAuth }) => {
+  const { user, logout } = useAuth();
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'query', label: 'Query & Synthesize', icon: Cpu },
+    { id: 'history', label: 'History', icon: History },
     { id: 'comparison', label: 'Candidate Comparison', icon: Scale },
     { id: 'analytics', label: 'Analytics & Pareto', icon: Layers },
     { id: 'experiments', label: 'Benchmark Suite', icon: Beaker },
@@ -67,18 +72,50 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, isMock 
           })}
         </nav>
 
-        {/* Status Indicator Pill */}
-        <div className="flex items-center space-x-2 shrink-0">
+        {/* Status Indicator & Auth Section */}
+        <div className="flex items-center space-x-3 shrink-0">
+          {/* Mode Badge */}
           {isMock ? (
-            <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono font-medium">
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] font-mono font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-              <span>SIMULATION MODE</span>
+              <span className="hidden sm:inline">SIMULATION MODE</span>
+              <span className="sm:hidden">SIM</span>
             </div>
           ) : (
-            <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-mono font-medium">
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-mono font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span>LIVE API CONNECTED</span>
+              <span className="hidden sm:inline">LIVE API CONNECTED</span>
+              <span className="sm:hidden">LIVE</span>
             </div>
+          )}
+
+          {/* User Auth Info */}
+          {user ? (
+            <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
+              <div className="flex items-center space-x-1.5 text-xs text-slate-300">
+                <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-[10px]">
+                  {user.full_name ? user.full_name[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
+                </div>
+                <span className="hidden md:inline font-medium text-slate-200 max-w-[100px] truncate">
+                  {user.full_name || user.email?.split('@')[0]}
+                </span>
+              </div>
+              <button
+                onClick={logout}
+                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAuth}
+              className="flex items-center space-x-1.5 py-1.5 px-3 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 rounded-lg text-xs font-semibold transition-colors"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
           )}
         </div>
       </div>

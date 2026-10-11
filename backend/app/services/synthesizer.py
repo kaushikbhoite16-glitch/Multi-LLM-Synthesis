@@ -28,7 +28,8 @@ class SynthesizerService:
         query: str,
         structured_context: str,
         synthesis_model: str = "openai/gpt-4o-mini",
-        preferences: Optional[UserPreferenceSchema] = None
+        preferences: Optional[UserPreferenceSchema] = None,
+        force_mock: bool = False
     ) -> SynthesisResult:
         """
         Executes final adaptive answer synthesis over the structured multi-candidate context.
@@ -43,13 +44,14 @@ class SynthesizerService:
 
         max_tokens = preferences.max_tokens if preferences and preferences.max_tokens else 2000
 
-        if self.openrouter.has_api_key():
+        if self.openrouter.has_api_key() and not force_mock:
             try:
                 resp = await self.openrouter.generate_response(
                     model=synthesis_model,
                     messages=messages,
                     max_tokens=max_tokens,
-                    temperature=0.4
+                    temperature=0.4,
+                    force_mock=force_mock
                 )
                 if resp.status == "success" and resp.response_text:
                     log_stage(

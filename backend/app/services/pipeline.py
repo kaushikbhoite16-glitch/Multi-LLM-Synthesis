@@ -43,9 +43,13 @@ class PipelineOrchestrator:
         self.synthesizer = SynthesizerService(self.openrouter)
         self.final_evaluator = FinalEvaluator(self.evaluator)
 
-    async def execute_pipeline(self, req: PipelineRunRequest) -> PipelineRunResponse:
+    async def execute_pipeline(self, req: PipelineRunRequest, user_id: Optional[int] = None) -> PipelineRunResponse:
         total_pipeline_start = time.perf_counter()
         
+        # Determine mode
+        is_simulation = req.execution_mode == "simulation" or not self.openrouter.has_api_key() or settings.MOCK_MODE
+        force_mock = is_simulation
+
         # 1. Models and Preferences Selection
         models = req.models or settings.DEFAULT_CANDIDATE_MODELS
         evaluator_model = req.evaluator_model or settings.DEFAULT_EVALUATOR_MODEL
@@ -57,18 +61,20 @@ class PipelineOrchestrator:
         # 2. Query Analysis
         analysis: QueryAnalysisResult = await self.query_analyzer.analyze(
             query=req.query,
-            model=evaluator_model
+            model=evaluator_model,
+            force_mock=force_mock
         )
 
         # 3. Parallel Multi-LLM Generation via OpenRouter
-        log_stage("pipeline", "Executing parallel model calls", count=len(models))
+        log_stage("pipeline", f"Executing parallel model calls (mode={'simulation' if is_simulation else 'live'})", count=len(models))
         messages = [
             {"role": "user", "content": req.query}
         ]
         candidates: List[NormalizedResponse] = await self.openrouter.generate_parallel_responses(
             models=models,
             messages=messages,
-            max_tokens=preferences.max_tokens or 1500
+            max_tokens=preferences.max_tokens or 1500,
+            force_mock=force_mock
         )
 
         # Filter out hard failures for evaluation, but keep error records
@@ -82,7 +88,8 @@ class PipelineOrchestrator:
             query=req.query,
             preferences=preferences,
             candidates=valid_candidates,
-            evaluator_model=evaluator_model
+            evaluator_model=evaluator_model,
+            force_mock=force_mock
         )
 
         # 5. Multi-Criteria Scoring & Ranking with Resource Penalties
@@ -117,7 +124,8 @@ class PipelineOrchestrator:
             query=req.query,
             structured_context=structured_context,
             synthesis_model=synthesis_model,
-            preferences=preferences
+            preferences=preferences,
+            force_mock=force_mock
         )
 
         # 9. Final Response Evaluation
@@ -126,19 +134,25 @@ class PipelineOrchestrator:
             synthesis=synthesis,
             ranked_candidates=ranked_candidates,
             preferences=preferences,
-            evaluator_model=evaluator_model
+            evaluator_model=evaluator_model,
+            force_mock=force_mock
         )
 
         # Total Resource Aggregates
         pipeline_tokens = sum(c.total_tokens for c in candidates) + synthesis.total_tokens
-        pipeline_cost = round(sum(c.cost for c in candidates) + synthesis.cost, 6)
+        # In simulation mode, actual API cost is 0.00
+        pipeline_cost = 0.0 if is_simulation else round(sum(c.cost for c in candidates) + synthesis.cost, 6)
         total_latency_ms = int((time.perf_counter() - total_pipeline_start) * 1000)
 
         # 10. Research Storage in Database
         if self.db:
             try:
                 # Query Record
+                title_preview = req.query.strip().split("\n")[0][:60]
                 q_entity = QueryEntity(
+                    user_id=user_id,
+                    title=title_preview,
+                    execution_mode="simulation" if is_simulation else "live",
                     query_text=req.query,
                     query_type=analysis.query_type,
                     domain=analysis.domain,
@@ -151,7 +165,7 @@ class PipelineOrchestrator:
 
                 # Preference Record
                 pref_entity = PreferenceEntity(
-                    user_id=None,
+                    user_id=user_id,
                     relevance_weight=preferences.relevance_weight,
                     correctness_weight=preferences.correctness_weight,
                     completeness_weight=preferences.completeness_weight,
@@ -275,5 +289,6 @@ class PipelineOrchestrator:
             total_pipeline_tokens=pipeline_tokens,
             total_pipeline_cost=pipeline_cost,
             total_pipeline_latency_ms=total_latency_ms,
-            is_mock=not self.openrouter.has_api_key() or settings.MOCK_MODE
+            is_mock=is_simulation,
+            execution_mode="simulation" if is_simulation else "live"
         )

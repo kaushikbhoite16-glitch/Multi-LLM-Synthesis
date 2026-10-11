@@ -7,7 +7,15 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    email = Column(String(255), unique=True, index=True, nullable=True)
+    hashed_password = Column(String(255), nullable=True)
+    full_name = Column(String(255), nullable=True)
+    google_id = Column(String(255), nullable=True)
+    reset_token = Column(String(255), nullable=True)
+    reset_token_expiry = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     
     preferences = relationship("Preference", back_populates="user", cascade="all, delete-orphan")
     queries = relationship("Query", back_populates="user", cascade="all, delete-orphan")
@@ -51,13 +59,16 @@ class Query(Base):
     
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    title = Column(String(255), nullable=True)
     query_text = Column(Text, nullable=False)
     query_type = Column(String(50), nullable=True)  # educational, coding, reasoning, creative, factoid
     domain = Column(String(50), nullable=True)      # computer_science, mathematics, general, etc.
     difficulty = Column(String(50), nullable=True)  # beginner, intermediate, advanced
     expected_style = Column(String(50), nullable=True)
     recommended_criteria = Column(JSON, nullable=True)
+    execution_mode = Column(String(50), default="live")  # live, simulation
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     
     user = relationship("User", back_populates="queries")
     model_runs = relationship("ModelRun", back_populates="query", cascade="all, delete-orphan")

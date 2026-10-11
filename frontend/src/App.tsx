@@ -9,6 +9,9 @@ import { ExperimentPage } from './pages/ExperimentPage';
 import { ModelConfigPage } from './pages/ModelConfigPage';
 import { EvaluationConfigPage } from './pages/EvaluationConfigPage';
 import { HumanEvalPage } from './pages/HumanEvalPage';
+import { QuestionHistoryPage } from './pages/QuestionHistoryPage';
+import { AuthModal } from './components/AuthModal';
+import { AuthProvider } from './context/AuthContext';
 import { apiService } from './services/api';
 import {
   ModelConfig,
@@ -16,12 +19,13 @@ import {
   AnalyticsData
 } from './types';
 
-export const App: React.FC = () => {
+const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [models, setModels] = useState<ModelConfig[]>([]);
   const [latestResult, setLatestResult] = useState<PipelineRunResponse | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isMock, setIsMock] = useState(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     loadInitialData();
@@ -48,6 +52,12 @@ export const App: React.FC = () => {
     apiService.getAnalytics().then(setAnalytics).catch(() => {});
   };
 
+  const handleSelectHistoryQuestion = (result: PipelineRunResponse) => {
+    setLatestResult(result);
+    setIsMock(result.is_mock);
+    setActiveTab('result');
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-sky-500 selection:text-white">
       {/* Top Academic Navigation Bar */}
@@ -55,6 +65,7 @@ export const App: React.FC = () => {
         activeTab={activeTab === 'result' ? 'query' : activeTab}
         setActiveTab={setActiveTab}
         isMock={isMock}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -71,6 +82,14 @@ export const App: React.FC = () => {
           <QueryPage
             availableModels={models}
             onExecutionComplete={handleExecutionComplete}
+          />
+        )}
+
+        {activeTab === 'history' && (
+          <QuestionHistoryPage
+            onSelectQuestion={handleSelectHistoryQuestion}
+            onNavigateToQuery={() => setActiveTab('query')}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
           />
         )}
 
@@ -112,6 +131,12 @@ export const App: React.FC = () => {
         )}
       </main>
 
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
+
       {/* Academic Footer */}
       <footer className="border-t border-slate-900 bg-slate-950/80 py-6 text-center text-xs text-slate-400">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -128,6 +153,14 @@ export const App: React.FC = () => {
         </div>
       </footer>
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   );
 };
 

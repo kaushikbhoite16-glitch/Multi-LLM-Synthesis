@@ -20,7 +20,8 @@ class FinalEvaluator:
         synthesis: SynthesisResult,
         ranked_candidates: List[RankedResponse],
         preferences: Optional[UserPreferenceSchema] = None,
-        evaluator_model: str = "openai/gpt-4o-mini"
+        evaluator_model: str = "openai/gpt-4o-mini",
+        force_mock: bool = False
     ) -> FinalEvaluationResult:
         """
         Evaluates the final synthesized response under the exact same multi-criteria protocol
@@ -46,7 +47,8 @@ class FinalEvaluator:
             query=query,
             preferences=preferences,
             response=norm_synthesis,
-            evaluator_model=evaluator_model
+            evaluator_model=evaluator_model,
+            force_mock=force_mock
         )
 
         # Baseline: Best Candidate

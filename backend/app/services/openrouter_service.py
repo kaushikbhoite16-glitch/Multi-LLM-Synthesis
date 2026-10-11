@@ -167,7 +167,8 @@ class OpenRouterService:
         models: List[str],
         messages: List[Dict[str, str]],
         max_tokens: int = 1500,
-        temperature: float = 0.7
+        temperature: float = 0.7,
+        force_mock: bool = False
     ) -> List[NormalizedResponse]:
         """
         Queries all candidate models asynchronously in parallel.
@@ -179,7 +180,8 @@ class OpenRouterService:
                 messages=messages,
                 max_tokens=max_tokens,
                 temperature=temperature,
-                response_id=idx + 1
+                response_id=idx + 1,
+                force_mock=force_mock
             )
             for idx, m in enumerate(models)
         ]

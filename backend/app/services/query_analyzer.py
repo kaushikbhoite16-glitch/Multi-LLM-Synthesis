@@ -29,13 +29,13 @@ class QueryAnalyzer:
     def __init__(self, openrouter_service: OpenRouterService):
         self.openrouter = openrouter_service
 
-    async def analyze(self, query: str, model: str = "openai/gpt-4o-mini") -> QueryAnalysisResult:
+    async def analyze(self, query: str, model: str = "openai/gpt-4o-mini", force_mock: bool = False) -> QueryAnalysisResult:
         """
         Analyzes the incoming query using LLM structured extraction, with deterministic heuristic fallback.
         """
         log_stage("query", "Analyzing query characteristics", query=query[:60])
         
-        if self.openrouter.has_api_key():
+        if self.openrouter.has_api_key() and not force_mock:
             try:
                 messages = [
                     {"role": "system", "content": QUERY_ANALYSIS_SYSTEM_PROMPT},
@@ -45,7 +45,8 @@ class QueryAnalyzer:
                     model=model,
                     messages=messages,
                     max_tokens=400,
-                    temperature=0.1
+                    temperature=0.1,
+                    force_mock=force_mock
                 )
                 if resp.status == "success" and resp.response_text:
                     # Clean markdown code blocks if any

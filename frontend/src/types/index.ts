@@ -140,6 +140,37 @@ export interface PipelineRunResponse {
   total_pipeline_cost: number;
   total_pipeline_latency_ms: number;
   is_mock: boolean;
+  execution_mode?: 'live' | 'simulation';
+}
+
+export interface User {
+  id: number;
+  email?: string;
+  full_name?: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
+
+export interface QuestionHistoryItem {
+  id: number;
+  title?: string;
+  query_text: string;
+  domain?: string;
+  difficulty?: string;
+  execution_mode: 'live' | 'simulation';
+  created_at: string;
+  updated_at?: string;
+  total_cost: number;
+  total_tokens: number;
+  synthesized_preview?: string;
+  synthesized_score?: number;
+  candidate_count: number;
 }
 
 export interface ModelConfig {

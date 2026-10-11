@@ -27,6 +27,7 @@ export const QueryPage: React.FC<QueryPageProps> = ({
   ]);
   const [evaluatorModel, setEvaluatorModel] = useState<string>('openai/gpt-4o-mini');
   const [synthesisModel, setSynthesisModel] = useState<string>('openai/gpt-4o-mini');
+  const [executionMode, setExecutionMode] = useState<'live' | 'simulation'>('simulation');
   
   const [preferences, setPreferences] = useState<UserPreferences>({
     relevance_weight: 0.25,
@@ -119,7 +120,8 @@ export const QueryPage: React.FC<QueryPageProps> = ({
         evaluator_model: evaluatorModel,
         synthesis_model: synthesisModel,
         preferences,
-        scoring_mode: preferences.scoring_mode
+        scoring_mode: preferences.scoring_mode,
+        execution_mode: executionMode
       });
 
       clearTimeout(timer1);
@@ -140,13 +142,43 @@ export const QueryPage: React.FC<QueryPageProps> = ({
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in duration-200">
       {/* Page Header */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-          Query & Research Experiment Runner
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1">
-          Configure multi-model parameters, set weighted criteria, and synthesize adaptive responses.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Query & Research Experiment Runner
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Configure multi-model parameters, set weighted criteria, and synthesize adaptive responses.
+          </p>
+        </div>
+
+        {/* Execution Mode Selector */}
+        <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 p-1 rounded-2xl">
+          <button
+            type="button"
+            onClick={() => setExecutionMode('simulation')}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              executionMode === 'simulation'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span>Simulation Mode</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setExecutionMode('live')}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              executionMode === 'live'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Live API Mode</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Query Input Card */}

@@ -49,7 +49,16 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
             <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-sky-950 text-sky-400 border border-sky-800 font-semibold">
               Query #{result.query_id}
             </span>
-            <span className="text-xs text-slate-400 font-mono">
+            <span
+              className={`text-[11px] font-mono uppercase px-2.5 py-0.5 rounded-full border ${
+                result.execution_mode === 'simulation' || result.is_mock
+                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+              }`}
+            >
+              {result.execution_mode === 'simulation' || result.is_mock ? 'SIMULATION MODE (MOCK)' : 'LIVE API (GENUINE)'}
+            </span>
+            <span className="text-xs text-slate-400 font-mono hidden md:inline">
               Domain: {result.analysis.domain} | Difficulty: {result.analysis.difficulty}
             </span>
           </div>
@@ -107,9 +116,11 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">
           <span className="text-slate-400 text-[10px] uppercase font-mono block">Pipeline Cost</span>
           <div className="text-xl font-bold font-mono text-emerald-400 mt-1">
-            ${result.total_pipeline_cost.toFixed(5)}
+            {result.execution_mode === 'simulation' || result.is_mock ? '$0.00000' : `$${result.total_pipeline_cost.toFixed(5)}`}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Actual OpenRouter Bill</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">
+            {result.execution_mode === 'simulation' || result.is_mock ? 'Simulated (No Cost)' : 'Actual OpenRouter Bill'}
+          </div>
         </div>
 
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5">

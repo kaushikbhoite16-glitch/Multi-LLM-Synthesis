@@ -172,6 +172,7 @@ class PipelineRunRequest(BaseModel):
     synthesis_model: Optional[str] = None
     preferences: Optional[UserPreferenceSchema] = None
     scoring_mode: Optional[str] = "quality-first"
+    execution_mode: Optional[str] = "live"  # "live" or "simulation"
 
 
 class PipelineRunResponse(BaseModel):
@@ -181,7 +182,7 @@ class PipelineRunResponse(BaseModel):
     candidate_responses: List[NormalizedResponse]
     evaluations: List[EvaluationResult]
     ranking: List[RankedResponse]
-    conflicts: ConflictAnalysisResult
+    conflicts: Optional[ConflictAnalysisResult] = None
     structured_context: str
     synthesis: SynthesisResult
     final_evaluation: FinalEvaluationResult
@@ -189,6 +190,7 @@ class PipelineRunResponse(BaseModel):
     total_pipeline_cost: float
     total_pipeline_latency_ms: int
     is_mock: bool = False
+    execution_mode: str = "live"
 
 
 class HumanEvaluationRequest(BaseModel):
@@ -208,3 +210,61 @@ class ExperimentCreateRequest(BaseModel):
     name: str
     description: str
     configuration: Dict[str, Any]
+
+
+# ==========================================
+# Authentication & History Schemas
+# ==========================================
+
+class UserSignUpRequest(BaseModel):
+    email: str
+    password: str
+    full_name: Optional[str] = None
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+class GoogleLoginRequest(BaseModel):
+    credential: Optional[str] = None
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    google_id: Optional[str] = None
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+class UserProfileResponse(BaseModel):
+    id: int
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    is_active: bool = True
+    created_at: Optional[str] = None
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserProfileResponse
+
+class QuestionRenameRequest(BaseModel):
+    title: str
+
+class QuestionHistoryItem(BaseModel):
+    id: int
+    title: Optional[str] = None
+    query_text: str
+    domain: Optional[str] = None
+    difficulty: Optional[str] = None
+    execution_mode: str = "live"
+    created_at: str
+    updated_at: Optional[str] = None
+    total_cost: float = 0.0
+    total_tokens: int = 0
+    synthesized_preview: Optional[str] = None
+    synthesized_score: Optional[float] = None
+    candidate_count: int = 0
+
