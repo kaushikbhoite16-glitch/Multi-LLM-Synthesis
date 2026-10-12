@@ -183,9 +183,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-300 text-xs flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-300 text-xs flex flex-col gap-2">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+            {error.includes('already exists') && mode === 'signup' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('login');
+                  setError(null);
+                  setSuccess('Please enter your password to sign in to your existing account.');
+                }}
+                className="self-start text-[11px] text-sky-400 hover:text-sky-300 font-semibold underline underline-offset-2"
+              >
+                Sign in to this account &rarr;
+              </button>
+            )}
+            {error.includes('Invalid email or password') && mode === 'login' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('forgot');
+                  setError(null);
+                }}
+                className="self-start text-[11px] text-sky-400 hover:text-sky-300 font-semibold underline underline-offset-2"
+              >
+                Reset forgotten password &rarr;
+              </button>
+            )}
           </div>
         )}
 
