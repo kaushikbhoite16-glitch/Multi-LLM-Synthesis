@@ -30,16 +30,21 @@ def _get_sync_url() -> str:
     """
     Return a synchronous SQLAlchemy URL for Alembic's migration engine.
 
-    settings.DATABASE_URL already has the correct scheme after _normalize_database_url
-    in config.py, but Alembic uses synchronous engines, so we must strip the
-    async-driver specifier:
-      - postgresql+asyncpg://  →  postgresql://   (uses psycopg2 / any sync PG driver)
+    Alembic uses synchronous engines, so async drivers must be mapped to their
+    synchronous counterparts:
+      - postgresql+asyncpg://  →  postgresql+psycopg2://  (uses psycopg2-binary)
+      - postgresql://          →  postgresql+psycopg2://  (explicitly avoids psycopg default)
+      - postgres://            →  postgresql+psycopg2://
       - sqlite+aiosqlite://    →  sqlite://
     """
     url = settings.DATABASE_URL
-    url = url.replace("+asyncpg", "")
-    url = url.replace("+aiosqlite", "")
-    return url
+    if url.startswith("postgresql+asyncpg://"):
+        return url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+psycopg2://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    return url.replace("+aiosqlite", "")
 
 
 def run_migrations_offline() -> None:

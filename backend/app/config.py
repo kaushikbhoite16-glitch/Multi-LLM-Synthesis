@@ -1,6 +1,7 @@
 import os
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def _normalize_database_url(url: str) -> str:
@@ -17,6 +18,8 @@ def _normalize_database_url(url: str) -> str:
     so that the installed asyncpg driver is always selected for PostgreSQL
     connections. SQLite URLs are left unchanged.
     """
+    if not url:
+        return url
     if url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql+asyncpg://", 1)
     if url.startswith("postgresql://"):
@@ -36,11 +39,14 @@ class Settings(BaseSettings):
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 
     # Database
-    # Normalise the URL immediately so every consumer (session.py, alembic env.py,
-    # health endpoint) always sees the correct driver specifier.
-    DATABASE_URL: str = _normalize_database_url(
-        os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./multi_llm.db")
-    )
+    # Default to local SQLite. When DATABASE_URL is set in environment (e.g. on Render),
+    # the field_validator normalizes postgres:// or postgresql:// to postgresql+asyncpg://
+    DATABASE_URL: str = "sqlite+aiosqlite:///./multi_llm.db"
+
+    @field_validator("DATABASE_URL", mode="after")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        return _normalize_database_url(v)
     
     # Defaults
     DEFAULT_EVALUATOR_MODEL: str = os.getenv("DEFAULT_EVALUATOR_MODEL", "openai/gpt-4o-mini")
