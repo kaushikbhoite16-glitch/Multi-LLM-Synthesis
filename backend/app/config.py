@@ -85,4 +85,15 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "admin@multilllm.ai")
     ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "Admin@SecurePass2025!")
 
+    # Email Delivery Configuration (for password recovery & notifications)
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER: str = os.getenv("SMTP_USER", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    SMTP_FROM_EMAIL: str = os.getenv("SMTP_FROM_EMAIL", "")
+    SMTP_TLS: bool = os.getenv("SMTP_TLS", "true").lower() in ("true", "1", "yes")
+
+    # Testing flag: allows test suite to inspect reset tokens without mock bypasses
+    TESTING: bool = os.getenv("TESTING", "false").lower() in ("true", "1", "yes")
+
 settings = Settings()

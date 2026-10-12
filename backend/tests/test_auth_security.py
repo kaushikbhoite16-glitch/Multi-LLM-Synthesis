@@ -391,24 +391,27 @@ async def test_signup_then_immediate_login_same_credentials():
 
 
 # ---------------------------------------------------------------------------
-# 14. Google OAuth credential token parsing and account creation
+# 14. Google OAuth official ID token verification and account creation
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_google_oauth_credential_token_authentication():
-    """Verify backend parses Google ID token claims and creates/logs in user."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        google_email = f"google_user_{uuid.uuid4().hex[:6]}@gmail.com"
-        # Simulate a Google ID token payload
-        google_token = pyjwt.encode({
-            "sub": "google-id-123456789",
-            "email": google_email,
-            "name": "Google Verified User",
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-        }, "dummy-google-cert-key", algorithm="HS256")
+async def test_google_oauth_credential_token_authentication(monkeypatch):
+    """Verify backend verifies Google ID token via official library and creates/logs in user."""
+    from app.utils import security
 
-        # Submit credential token
+    google_email = f"google_verified_{uuid.uuid4().hex[:6]}@gmail.com"
+    mock_claims = {
+        "sub": "google-verified-id-998877",
+        "email": google_email,
+        "name": "Google Verified User",
+        "iss": "https://accounts.google.com"
+    }
+
+    # Monkeypatch verify_google_id_token to simulate Google's verified response
+    monkeypatch.setattr(security, "verify_google_id_token", lambda token: mock_claims)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         oauth_res = await client.post("/api/auth/google", json={
-            "credential": google_token
+            "credential": "valid-signed-google-id-token"
         })
         assert oauth_res.status_code == 200, f"Google OAuth failed: {oauth_res.text}"
         oauth_data = oauth_res.json()
@@ -420,4 +423,77 @@ async def test_google_oauth_credential_token_authentication():
         me_res = await client.get("/api/auth/me", headers={"Authorization": f"Bearer {oauth_data['access_token']}"})
         assert me_res.status_code == 200
         assert me_res.json()["email"] == google_email
+
+
+# ---------------------------------------------------------------------------
+# 15. Invalid / forged Google ID token is strictly rejected (401)
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_invalid_google_id_token_rejected():
+    """Verify unverified/forged Google credentials fail verification and return 401."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # A forged JWT not signed by Google's private certs
+        forged_jwt = pyjwt.encode(
+            {"email": "hacker@evil.com", "name": "Fake", "iss": "https://accounts.google.com"},
+            "random-secret-not-google",
+            algorithm="HS256"
+        )
+        oauth_res = await client.post("/api/auth/google", json={
+            "credential": forged_jwt
+        })
+        assert oauth_res.status_code == 401, (
+            f"Expected 401 for forged Google token, got {oauth_res.status_code}: {oauth_res.text}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# 16. In production (TESTING=False), /auth/forgot-password never returns reset_token
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_forgot_password_never_exposes_token_in_production(monkeypatch):
+    """Verify reset_token is never present in API response when TESTING is False."""
+    monkeypatch.setattr(settings, "TESTING", False)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        email = _make_unique_email()
+        await client.post("/api/auth/signup", json={"email": email, "password": "Password123!"})
+
+        res = await client.post("/api/auth/forgot-password", json={"email": email})
+        assert res.status_code == 200
+        data = res.json()
+        assert "reset_token" not in data, (
+            "Security vulnerability: reset_token was leaked in API response when TESTING=False!"
+        )
+        assert "message" in data
+
+
+# ---------------------------------------------------------------------------
+# 17. Admin password synchronization only affects designated admin email
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_admin_password_sync_does_not_overwrite_normal_users():
+    """Verify admin password sync does not overwrite regular user accounts."""
+    from sqlalchemy.ext.asyncio import AsyncSession
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy import select
+    from app.database.session import engine
+    from app.models.entities import User
+    from app.utils.security import verify_password
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Create a regular user
+        user_email = _make_unique_email()
+        user_pw = "UserOriginalPassword123!"
+        await client.post("/api/auth/signup", json={"email": user_email, "password": user_pw})
+
+        # Verify password in DB matches user's password
+        AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        async with AsyncSessionLocal() as db:
+            res = await db.execute(select(User).where(User.email == user_email))
+            user = res.scalar_one_or_none()
+            assert user is not None
+            assert verify_password(user_pw, user.hashed_password)
+            # Must NOT match ADMIN_PASSWORD
+            assert not verify_password(settings.ADMIN_PASSWORD, user.hashed_password)
+
 

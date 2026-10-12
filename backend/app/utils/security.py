@@ -48,3 +48,32 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         return payload
     except jwt.PyJWTError:
         return None
+
+
+def verify_google_id_token(token: str) -> Dict[str, Any]:
+    """
+    Verifies a Google OAuth ID token using Google's official library.
+    Strictly verifies:
+      1. Cryptographic signature against Google's public certs
+      2. Token expiration (exp)
+      3. Token issuer (accounts.google.com or https://accounts.google.com)
+      4. Audience (must match configured GOOGLE_CLIENT_ID if set)
+
+    Raises ValueError if verification fails.
+    """
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+
+    transport = google_requests.Request()
+    expected_audience = settings.GOOGLE_CLIENT_ID if settings.GOOGLE_CLIENT_ID.strip() else None
+
+    # verify_oauth2_token validates signature, issuer, exp, and audience
+    idinfo = id_token.verify_oauth2_token(token, transport, audience=expected_audience)
+
+    # Confirm issuer is Google
+    issuer = idinfo.get("iss", "")
+    if issuer not in ("accounts.google.com", "https://accounts.google.com"):
+        raise ValueError(f"Invalid token issuer: {issuer}")
+
+    return idinfo
+

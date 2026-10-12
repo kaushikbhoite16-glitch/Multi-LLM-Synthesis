@@ -455,33 +455,44 @@ async def auth_google(
     req: GoogleLoginRequest,
     db: AsyncSession = Depends(get_session)
 ):
-    """Google OAuth sign-in / registration with credential JWT parsing and safe account linking"""
-    clean_email = None
-    full_name = req.full_name
-    google_id = req.google_id
+    """
+    Google OAuth sign-in / registration:
+    Strictly verifies Google's cryptographic signature, issuer, audience, and expiration
+    using Google's official verification library. Never trusts unverified claims.
+    """
+    from app.utils.security import verify_google_id_token
 
-    # If Google credential (ID token) is provided, decode and verify claims
-    if req.credential:
-        try:
-            import jwt as pyjwt
-            # Decode payload without signature verification if public cert validation is handled upstream,
-            # or if validating basic Google ID token payload structure
-            token_claims = pyjwt.decode(req.credential, options={"verify_signature": False})
-            clean_email = (token_claims.get("email") or "").strip().lower()
-            full_name = token_claims.get("name") or full_name
-            google_id = token_claims.get("sub") or google_id
-        except Exception as e:
-            logger.warning(f"Failed to parse Google credential token: {e}")
+    if not req.credential:
+        raise HTTPException(
+            status_code=400,
+            detail="Google ID token credential is required for Google Sign-In."
+        )
 
-    # Fallback to direct verified email if credential decoding didn't provide one
-    if not clean_email and req.email:
-        clean_email = req.email.strip().lower()
+    try:
+        # Cryptographically verifies signature against Google's public keys,
+        # checks expiration, issuer, and matches GOOGLE_CLIENT_ID audience if configured.
+        token_claims = verify_google_id_token(req.credential)
+    except ValueError as val_err:
+        raise HTTPException(
+            status_code=401,
+            detail=f"Google token verification failed: {str(val_err)}"
+        )
+    except Exception as exc:
+        logger.error(f"Google ID token verification error: {exc}")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired Google credentials."
+        )
 
+    clean_email = (token_claims.get("email") or "").strip().lower()
     if not clean_email or "@" not in clean_email:
         raise HTTPException(
             status_code=400,
-            detail="Google sign-in could not verify a valid email from the credential."
+            detail="Google ID token does not contain a valid email address."
         )
+
+    full_name = token_claims.get("name") or clean_email.split("@")[0]
+    google_id = token_claims.get("sub")
 
     res = await db.execute(select(UserEntity).where(UserEntity.email == clean_email))
     user = res.scalar_one_or_none()
@@ -526,19 +537,63 @@ async def auth_forgot_password(
     res = await db.execute(select(UserEntity).where(UserEntity.email == clean_email))
     user = res.scalar_one_or_none()
     
-    # Return success message even if email not found to prevent user enumeration
+    # Return generic success message even if email not found to prevent user enumeration
     if not user:
-        return {"message": "If this email is registered, password reset instructions have been dispatched."}
+        return {"message": "If an account with this email exists, password reset instructions have been dispatched."}
 
+    # Generate short-lived (15 minute), single-use secure reset token
     reset_token = str(uuid.uuid4())
     user.reset_token = reset_token
-    user.reset_token_expiry = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+    user.reset_token_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
     await db.commit()
 
-    return {
-        "message": "Password reset token generated successfully.",
-        "reset_token": reset_token  # Returned directly for ease of verification & dev usage
+    # Attempt to deliver password reset email via configured SMTP provider
+    email_delivered = False
+    if settings.SMTP_HOST and settings.SMTP_FROM_EMAIL:
+        try:
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = "Password Reset Request — Multi-LLM Synthesis"
+            msg["From"] = settings.SMTP_FROM_EMAIL
+            msg["To"] = clean_email
+
+            text_content = (
+                f"Hello {user.full_name or 'User'},\n\n"
+                f"We received a request to reset your password. Use the following recovery token to set a new password:\n\n"
+                f"{reset_token}\n\n"
+                f"This token is valid for 15 minutes and can only be used once.\n"
+                f"If you did not request this, you can safely ignore this email."
+            )
+            msg.attach(MIMEText(text_content, "plain"))
+
+            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10.0) as server:
+                if settings.SMTP_TLS:
+                    server.starttls()
+                if settings.SMTP_USER and settings.SMTP_PASSWORD:
+                    server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                server.send_message(msg)
+            email_delivered = True
+            logger.info(f"Password reset email sent to {clean_email}")
+        except Exception as mail_err:
+            logger.error(f"Failed to send password reset email via SMTP: {mail_err}")
+
+    # Build response: never expose reset_token in production
+    response_payload = {
+        "message": (
+            "Password reset instructions have been dispatched to your email address."
+            if email_delivered
+            else "Password reset requested. (Notice: Email delivery provider is not configured on this server; contact administrator.)"
+        )
     }
+
+    # Test-only mechanism: only return reset_token if settings.TESTING is explicitly enabled
+    if settings.TESTING:
+        response_payload["reset_token"] = reset_token
+
+    return response_payload
 
 @router.post("/auth/reset-password")
 async def auth_reset_password(
