@@ -85,13 +85,19 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "admin@multilllm.ai")
     ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "Admin@SecurePass2025!")
 
-    # Email Delivery Configuration (for password recovery & notifications)
+    # Email Delivery Configuration (Resend HTTPS API / SMTP compatibility)
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
     SMTP_HOST: str = os.getenv("SMTP_HOST", "")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USER: str = os.getenv("SMTP_USER", "")
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
     SMTP_FROM_EMAIL: str = os.getenv("SMTP_FROM_EMAIL", "")
     SMTP_TLS: bool = os.getenv("SMTP_TLS", "true").lower() in ("true", "1", "yes")
+
+    @property
+    def effective_resend_api_key(self) -> str:
+        """Returns RESEND_API_KEY if provided, falling back to SMTP_PASSWORD for backward compatibility."""
+        return (self.RESEND_API_KEY or self.SMTP_PASSWORD or "").strip()
 
     # Application Frontend URL (used for password reset links)
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://multi-llm-synthesis-web.vercel.app")
@@ -100,3 +106,4 @@ class Settings(BaseSettings):
     TESTING: bool = os.getenv("TESTING", "false").lower() in ("true", "1", "yes")
 
 settings = Settings()
+

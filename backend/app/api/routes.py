@@ -548,23 +548,20 @@ async def auth_forgot_password(
     user.reset_token_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
     await db.commit()
 
-    # Attempt to deliver password reset email via configured SMTP provider
+    # Attempt to deliver password reset email via configured Resend HTTPS API
     frontend_url = settings.FRONTEND_URL.rstrip("/")
     reset_link = f"{frontend_url}/?mode=reset&token={reset_token}"
     email_delivered = False
     delivery_error = None
 
-    if settings.SMTP_HOST and settings.SMTP_FROM_EMAIL:
+    api_key = settings.effective_resend_api_key
+    sender_email = (settings.SMTP_FROM_EMAIL or "").strip()
+
+    if api_key and sender_email:
         try:
-            import smtplib
-            from email.mime.text import MIMEText
-            from email.mime.multipart import MIMEMultipart
+            import httpx
 
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = "Password Reset Request — Multi-LLM Synthesis"
-            msg["From"] = settings.SMTP_FROM_EMAIL
-            msg["To"] = clean_email
-
+            subject = "Password Reset Request — Multi-LLM Synthesis"
             text_content = (
                 f"Hello {user.full_name or 'User'},\n\n"
                 f"We received a request to reset your password for Multi-LLM Synthesis.\n\n"
@@ -575,32 +572,64 @@ async def auth_forgot_password(
                 f"This link and token are valid for 15 minutes and can only be used once.\n"
                 f"If you did not request a password reset, you can safely ignore this email."
             )
-            msg.attach(MIMEText(text_content, "plain"))
+            html_content = (
+                f"<div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>"
+                f"<h2 style='color: #4f46e5;'>Password Reset Request</h2>"
+                f"<p>Hello {user.full_name or 'User'},</p>"
+                f"<p>We received a request to reset your password for <strong>Multi-LLM Synthesis</strong>.</p>"
+                f"<p style='margin: 24px 0;'>"
+                f"<a href='{reset_link}' style='background-color: #4f46e5; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;'>Reset Password</a>"
+                f"</p>"
+                f"<p>Or enter your recovery token directly in the app:</p>"
+                f"<p style='background-color: #f3f4f6; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 14px;'>{reset_token}</p>"
+                f"<p style='color: #6b7280; font-size: 13px; margin-top: 24px;'>This link and token are valid for 15 minutes and can only be used once.<br>If you did not request a password reset, you can safely ignore this email.</p>"
+                f"</div>"
+            )
 
-            # Port 465 uses direct SSL; 587 uses STARTTLS
-            if settings.SMTP_PORT == 465:
-                with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10.0) as server:
-                    if settings.SMTP_USER and settings.SMTP_PASSWORD:
-                        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-                    server.send_message(msg)
+            resend_payload = {
+                "from": sender_email,
+                "to": [clean_email],
+                "subject": subject,
+                "text": text_content,
+                "html": html_content,
+            }
+
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            }
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(
+                    "https://api.resend.com/emails",
+                    json=resend_payload,
+                    headers=headers,
+                )
+
+            if res.status_code in (200, 201):
+                email_delivered = True
+                logger.info(f"Password reset email dispatched via Resend HTTPS API to {clean_email}")
             else:
-                with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10.0) as server:
-                    if settings.SMTP_TLS:
-                        server.starttls()
-                    if settings.SMTP_USER and settings.SMTP_PASSWORD:
-                        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-                    server.send_message(msg)
-            email_delivered = True
-            logger.info(f"Password reset email dispatched to {clean_email}")
+                err_detail = "Failed to send email via Resend API"
+                try:
+                    err_json = res.json()
+                    err_detail = err_json.get("message") or err_json.get("detail") or str(err_json)
+                except Exception:
+                    err_detail = res.text[:200]
+                delivery_error = f"Resend API error (status {res.status_code}): {err_detail}"
+                logger.error(f"Resend API delivery failed for {clean_email}: {delivery_error}")
+        except httpx.TimeoutException:
+            delivery_error = "Resend API request timed out"
+            logger.error(f"Resend API request timed out for {clean_email}")
         except Exception as mail_err:
             delivery_error = str(mail_err)
-            logger.error(f"Failed to send password reset email via SMTP: {mail_err}")
+            logger.error(f"Failed to send password reset email via Resend: {mail_err}")
 
     # Build response: never expose reset_token in production
     if email_delivered:
         message = "A password reset link has been dispatched to your email address."
     elif delivery_error:
-        message = f"Email delivery failed: {delivery_error}. Please verify server SMTP configuration or contact administrator."
+        message = f"Email delivery failed: {delivery_error}. Please verify server email configuration or contact administrator."
     else:
         message = "Email delivery provider is not configured on this server. Please contact your administrator."
 

@@ -580,35 +580,29 @@ async def test_reused_reset_token_rejected():
 
 
 # ---------------------------------------------------------------------------
-# 21. Configured SMTP sends email with reset link and token
+# 21. Configured Resend HTTPS API sends email with reset link and token
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_smtp_email_delivery_dispatches_message(monkeypatch):
-    """Verify SMTP email delivery sends correctly formatted message with reset link."""
-    sent_messages = []
+async def test_resend_email_delivery_dispatches_message(monkeypatch):
+    """Verify Resend HTTPS API delivery sends correctly formatted payload with reset link."""
+    intercepted_requests = []
+    import httpx
+    orig_post = httpx.AsyncClient.post
 
-    class MockSMTP:
-        def __init__(self, host, port, timeout=10.0):
-            self.host = host
-            self.port = port
-        def __enter__(self):
-            return self
-        def __exit__(self, *args):
-            pass
-        def starttls(self):
-            pass
-        def login(self, user, password):
-            pass
-        def send_message(self, msg):
-            sent_messages.append(msg)
+    async def mock_post(self, url, *args, **kwargs):
+        if "api.resend.com" in str(url):
+            intercepted_requests.append({
+                "url": str(url),
+                "json": kwargs.get("json"),
+                "headers": kwargs.get("headers")
+            })
+            return httpx.Response(200, json={"id": "mock_msg_123"}, request=httpx.Request("POST", str(url)))
+        return await orig_post(self, url, *args, **kwargs)
 
-    import smtplib
-    monkeypatch.setattr(smtplib, "SMTP", MockSMTP)
-    monkeypatch.setattr(settings, "SMTP_HOST", "smtp.test-provider.com")
-    monkeypatch.setattr(settings, "SMTP_PORT", 587)
-    monkeypatch.setattr(settings, "SMTP_FROM_EMAIL", "noreply@multilllm.ai")
-    monkeypatch.setattr(settings, "SMTP_USER", "test-user")
-    monkeypatch.setattr(settings, "SMTP_PASSWORD", "test-pass")
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+    monkeypatch.setattr(settings, "RESEND_API_KEY", "re_test_api_key_123")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "")
+    monkeypatch.setattr(settings, "SMTP_FROM_EMAIL", "onboarding@resend.dev")
     monkeypatch.setattr(settings, "FRONTEND_URL", "https://multi-llm-synthesis-web.vercel.app")
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -618,14 +612,108 @@ async def test_smtp_email_delivery_dispatches_message(monkeypatch):
         res = await client.post("/api/auth/forgot-password", json={"email": email})
         assert res.status_code == 200
         assert "dispatched" in res.json().get("message", "").lower()
-        assert len(sent_messages) == 1
+        assert len(intercepted_requests) == 1
 
-        sent_msg = sent_messages[0]
-        assert sent_msg["To"] == email
-        assert sent_msg["From"] == "noreply@multilllm.ai"
-        assert "Password Reset Request" in sent_msg["Subject"]
-        body_content = sent_msg.get_payload()[0].get_payload()
-        assert "https://multi-llm-synthesis-web.vercel.app/?mode=reset&token=" in body_content
+        req = intercepted_requests[0]
+        assert req["url"] == "https://api.resend.com/emails"
+        assert req["headers"]["Authorization"] == "Bearer re_test_api_key_123"
+        assert req["json"]["to"] == [email]
+        assert req["json"]["from"] == "onboarding@resend.dev"
+        assert "Password Reset Request" in req["json"]["subject"]
+        assert "https://multi-llm-synthesis-web.vercel.app/?mode=reset&token=" in req["json"]["text"]
+        assert "https://multi-llm-synthesis-web.vercel.app/?mode=reset&token=" in req["json"]["html"]
+
+
+# ---------------------------------------------------------------------------
+# 22. Resend API key fallback to SMTP_PASSWORD for backward compatibility
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_resend_api_key_fallback_to_smtp_password(monkeypatch):
+    """Verify effective_resend_api_key falls back to SMTP_PASSWORD if RESEND_API_KEY is unset."""
+    intercepted_headers = []
+    import httpx
+    orig_post = httpx.AsyncClient.post
+
+    async def mock_post(self, url, *args, **kwargs):
+        if "api.resend.com" in str(url):
+            intercepted_headers.append(kwargs.get("headers"))
+            return httpx.Response(200, json={"id": "mock_msg_fallback"}, request=httpx.Request("POST", str(url)))
+        return await orig_post(self, url, *args, **kwargs)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+    monkeypatch.setattr(settings, "RESEND_API_KEY", "")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "re_fallback_key_456")
+    monkeypatch.setattr(settings, "SMTP_FROM_EMAIL", "onboarding@resend.dev")
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        email = _make_unique_email()
+        await client.post("/api/auth/signup", json={"email": email, "password": "Password123!"})
+
+        res = await client.post("/api/auth/forgot-password", json={"email": email})
+        assert res.status_code == 200
+        assert "dispatched" in res.json().get("message", "").lower()
+        assert len(intercepted_headers) == 1
+        assert intercepted_headers[0]["Authorization"] == "Bearer re_fallback_key_456"
+
+
+# ---------------------------------------------------------------------------
+# 23. Resend API error reporting without leaking secret keys
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_resend_api_error_handling(monkeypatch):
+    """Verify Resend error response is handled gracefully without leaking keys or tokens."""
+    import httpx
+    orig_post = httpx.AsyncClient.post
+
+    async def mock_post(self, url, *args, **kwargs):
+        if "api.resend.com" in str(url):
+            return httpx.Response(403, json={"message": "Domain not verified", "name": "validation_error"}, request=httpx.Request("POST", str(url)))
+        return await orig_post(self, url, *args, **kwargs)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+    monkeypatch.setattr(settings, "RESEND_API_KEY", "re_secret_key_789")
+    monkeypatch.setattr(settings, "SMTP_FROM_EMAIL", "unverified@domain.com")
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        email = _make_unique_email()
+        await client.post("/api/auth/signup", json={"email": email, "password": "Password123!"})
+
+        res = await client.post("/api/auth/forgot-password", json={"email": email})
+        assert res.status_code == 200
+        data = res.json()
+        assert "Domain not verified" in data.get("message", "")
+        # Confirm API key is never leaked
+        assert "re_secret_key_789" not in data.get("message", "")
+
+
+# ---------------------------------------------------------------------------
+# 24. Resend API timeout handling
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_resend_api_timeout_handling(monkeypatch):
+    """Verify Resend network timeout is handled cleanly."""
+    import httpx
+    orig_post = httpx.AsyncClient.post
+
+    async def mock_post(self, url, *args, **kwargs):
+        if "api.resend.com" in str(url):
+            raise httpx.TimeoutException("Connection timed out", request=httpx.Request("POST", str(url)))
+        return await orig_post(self, url, *args, **kwargs)
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+    monkeypatch.setattr(settings, "RESEND_API_KEY", "re_secret_key_789")
+    monkeypatch.setattr(settings, "SMTP_FROM_EMAIL", "onboarding@resend.dev")
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        email = _make_unique_email()
+        await client.post("/api/auth/signup", json={"email": email, "password": "Password123!"})
+
+        res = await client.post("/api/auth/forgot-password", json={"email": email})
+        assert res.status_code == 200
+        data = res.json()
+        assert "timed out" in data.get("message", "").lower()
+
+
 
 
 
