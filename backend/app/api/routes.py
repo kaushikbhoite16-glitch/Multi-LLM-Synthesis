@@ -50,6 +50,7 @@ from app.models.entities import (
     HumanEvaluation as HumanEvalEntity
 )
 from app.utils.security import hash_password, verify_password, create_access_token
+from app.utils.logger import logger
 from app.config import settings
 
 router = APIRouter()
@@ -548,7 +549,11 @@ async def auth_forgot_password(
     await db.commit()
 
     # Attempt to deliver password reset email via configured SMTP provider
+    frontend_url = settings.FRONTEND_URL.rstrip("/")
+    reset_link = f"{frontend_url}/?mode=reset&token={reset_token}"
     email_delivered = False
+    delivery_error = None
+
     if settings.SMTP_HOST and settings.SMTP_FROM_EMAIL:
         try:
             import smtplib
@@ -562,32 +567,44 @@ async def auth_forgot_password(
 
             text_content = (
                 f"Hello {user.full_name or 'User'},\n\n"
-                f"We received a request to reset your password. Use the following recovery token to set a new password:\n\n"
+                f"We received a request to reset your password for Multi-LLM Synthesis.\n\n"
+                f"Click the link below to set a new password:\n"
+                f"{reset_link}\n\n"
+                f"Or use your recovery token directly in the app:\n"
                 f"{reset_token}\n\n"
-                f"This token is valid for 15 minutes and can only be used once.\n"
-                f"If you did not request this, you can safely ignore this email."
+                f"This link and token are valid for 15 minutes and can only be used once.\n"
+                f"If you did not request a password reset, you can safely ignore this email."
             )
             msg.attach(MIMEText(text_content, "plain"))
 
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10.0) as server:
-                if settings.SMTP_TLS:
-                    server.starttls()
-                if settings.SMTP_USER and settings.SMTP_PASSWORD:
-                    server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-                server.send_message(msg)
+            # Port 465 uses direct SSL; 587 uses STARTTLS
+            if settings.SMTP_PORT == 465:
+                with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10.0) as server:
+                    if settings.SMTP_USER and settings.SMTP_PASSWORD:
+                        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                    server.send_message(msg)
+            else:
+                with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10.0) as server:
+                    if settings.SMTP_TLS:
+                        server.starttls()
+                    if settings.SMTP_USER and settings.SMTP_PASSWORD:
+                        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                    server.send_message(msg)
             email_delivered = True
-            logger.info(f"Password reset email sent to {clean_email}")
+            logger.info(f"Password reset email dispatched to {clean_email}")
         except Exception as mail_err:
+            delivery_error = str(mail_err)
             logger.error(f"Failed to send password reset email via SMTP: {mail_err}")
 
     # Build response: never expose reset_token in production
-    response_payload = {
-        "message": (
-            "Password reset instructions have been dispatched to your email address."
-            if email_delivered
-            else "Password reset requested. (Notice: Email delivery provider is not configured on this server; contact administrator.)"
-        )
-    }
+    if email_delivered:
+        message = "A password reset link has been dispatched to your email address."
+    elif delivery_error:
+        message = f"Email delivery failed: {delivery_error}. Please verify server SMTP configuration or contact administrator."
+    else:
+        message = "Email delivery provider is not configured on this server. Please contact your administrator."
+
+    response_payload = {"message": message}
 
     # Test-only mechanism: only return reset_token if settings.TESTING is explicitly enabled
     if settings.TESTING:

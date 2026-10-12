@@ -93,6 +93,9 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = os.getenv("SMTP_FROM_EMAIL", "")
     SMTP_TLS: bool = os.getenv("SMTP_TLS", "true").lower() in ("true", "1", "yes")
 
+    # Application Frontend URL (used for password reset links)
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://multi-llm-synthesis-web.vercel.app")
+
     # Testing flag: allows test suite to inspect reset tokens without mock bypasses
     TESTING: bool = os.getenv("TESTING", "false").lower() in ("true", "1", "yes")
 

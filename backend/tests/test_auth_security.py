@@ -497,3 +497,135 @@ async def test_admin_password_sync_does_not_overwrite_normal_users():
             assert not verify_password(settings.ADMIN_PASSWORD, user.hashed_password)
 
 
+# ---------------------------------------------------------------------------
+# 18. Invalid reset token is rejected (400)
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_invalid_reset_token_rejected():
+    """Verify non-existent/invalid reset token returns 400."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        res = await client.post("/api/auth/reset-password", json={
+            "token": "completely-invalid-nonexistent-token-12345",
+            "new_password": "ValidNewPassword123!"
+        })
+        assert res.status_code == 400
+        assert "Invalid or expired" in res.json().get("detail", "")
+
+
+# ---------------------------------------------------------------------------
+# 19. Expired reset token is rejected (400)
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_expired_reset_token_rejected():
+    """Verify reset token past its expiry window is strictly rejected."""
+    from sqlalchemy.ext.asyncio import AsyncSession
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy import select
+    from app.database.session import engine
+    from app.models.entities import User
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        email = _make_unique_email()
+        await client.post("/api/auth/signup", json={"email": email, "password": "OldPassword123!"})
+
+        # Request reset
+        forgot_res = await client.post("/api/auth/forgot-password", json={"email": email})
+        reset_token = forgot_res.json()["reset_token"]
+
+        # Manually expire the token in database
+        AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        async with AsyncSessionLocal() as db:
+            res = await db.execute(select(User).where(User.email == email))
+            user = res.scalar_one_or_none()
+            user.reset_token_expiry = datetime.datetime.utcnow() - datetime.timedelta(seconds=10)
+            await db.commit()
+
+        # Attempt to reset with expired token
+        reset_res = await client.post("/api/auth/reset-password", json={
+            "token": reset_token,
+            "new_password": "NewPassword123!"
+        })
+        assert reset_res.status_code == 400
+        assert "expired" in reset_res.json().get("detail", "").lower()
+
+
+# ---------------------------------------------------------------------------
+# 20. Reused reset token is strictly rejected (single-use enforcement)
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_reused_reset_token_rejected():
+    """Verify single-use token: once used, second attempt is rejected."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        email = _make_unique_email()
+        await client.post("/api/auth/signup", json={"email": email, "password": "InitialPassword123!"})
+
+        # Request reset
+        forgot_res = await client.post("/api/auth/forgot-password", json={"email": email})
+        reset_token = forgot_res.json()["reset_token"]
+
+        # First use: must succeed
+        first_reset = await client.post("/api/auth/reset-password", json={
+            "token": reset_token,
+            "new_password": "FirstNewPassword123!"
+        })
+        assert first_reset.status_code == 200
+
+        # Second use (replay attack): must be rejected
+        second_reset = await client.post("/api/auth/reset-password", json={
+            "token": reset_token,
+            "new_password": "AttackerPassword123!"
+        })
+        assert second_reset.status_code == 400
+        assert "Invalid or expired" in second_reset.json().get("detail", "")
+
+
+# ---------------------------------------------------------------------------
+# 21. Configured SMTP sends email with reset link and token
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_smtp_email_delivery_dispatches_message(monkeypatch):
+    """Verify SMTP email delivery sends correctly formatted message with reset link."""
+    sent_messages = []
+
+    class MockSMTP:
+        def __init__(self, host, port, timeout=10.0):
+            self.host = host
+            self.port = port
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
+        def starttls(self):
+            pass
+        def login(self, user, password):
+            pass
+        def send_message(self, msg):
+            sent_messages.append(msg)
+
+    import smtplib
+    monkeypatch.setattr(smtplib, "SMTP", MockSMTP)
+    monkeypatch.setattr(settings, "SMTP_HOST", "smtp.test-provider.com")
+    monkeypatch.setattr(settings, "SMTP_PORT", 587)
+    monkeypatch.setattr(settings, "SMTP_FROM_EMAIL", "noreply@multilllm.ai")
+    monkeypatch.setattr(settings, "SMTP_USER", "test-user")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "test-pass")
+    monkeypatch.setattr(settings, "FRONTEND_URL", "https://multi-llm-synthesis-web.vercel.app")
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        email = _make_unique_email()
+        await client.post("/api/auth/signup", json={"email": email, "password": "Password123!"})
+
+        res = await client.post("/api/auth/forgot-password", json={"email": email})
+        assert res.status_code == 200
+        assert "dispatched" in res.json().get("message", "").lower()
+        assert len(sent_messages) == 1
+
+        sent_msg = sent_messages[0]
+        assert sent_msg["To"] == email
+        assert sent_msg["From"] == "noreply@multilllm.ai"
+        assert "Password Reset Request" in sent_msg["Subject"]
+        body_content = sent_msg.get_payload()[0].get_payload()
+        assert "https://multi-llm-synthesis-web.vercel.app/?mode=reset&token=" in body_content
+
+
+

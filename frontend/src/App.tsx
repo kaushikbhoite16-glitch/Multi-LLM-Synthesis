@@ -31,9 +31,21 @@ const MainApp: React.FC = () => {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isMock, setIsMock] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'forgot' | 'admin'>('login');
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'forgot' | 'reset' | 'admin'>('login');
+  const [authResetToken, setAuthResetToken] = useState('');
 
   useEffect(() => {
+    // Check if user followed a password reset link: ?mode=reset&token=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const modeParam = urlParams.get('mode');
+    const tokenParam = urlParams.get('token');
+    if (modeParam === 'reset' && tokenParam) {
+      setAuthModalMode('reset');
+      setAuthResetToken(tokenParam);
+      setIsAuthModalOpen(true);
+      // Clean query params from address bar without reloading
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     loadInitialData();
   }, []);
 
@@ -194,8 +206,12 @@ const MainApp: React.FC = () => {
       {/* Authentication Modal with Admin Login Support */}
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthResetToken('');
+        }}
         initialMode={authModalMode}
+        initialResetToken={authResetToken}
       />
     </div>
   );

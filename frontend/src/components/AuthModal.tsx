@@ -18,32 +18,37 @@ import {
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialMode?: 'login' | 'signup' | 'forgot' | 'admin';
+  initialMode?: 'login' | 'signup' | 'forgot' | 'reset' | 'admin';
+  initialResetToken?: string;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   initialMode = 'login',
+  initialResetToken = '',
 }) => {
   const { login, signUp, googleLogin } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot' | 'reset' | 'admin'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [resetToken, setResetToken] = useState('');
+  const [resetToken, setResetToken] = useState(initialResetToken);
   const [newPassword, setNewPassword] = useState('');
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync mode if initialMode changes
+  // Sync mode if initialMode or initialResetToken changes
   React.useEffect(() => {
     setMode(initialMode);
+    if (initialResetToken) {
+      setResetToken(initialResetToken);
+    }
     setError(null);
     setSuccess(null);
-  }, [initialMode, isOpen]);
+  }, [initialMode, initialResetToken, isOpen]);
 
   if (!isOpen) return null;
 
