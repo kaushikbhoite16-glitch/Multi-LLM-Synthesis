@@ -64,7 +64,7 @@ export const apiService = {
     return res.data;
   },
 
-  async googleLogin(payload: { email: string; full_name?: string; google_id?: string; credential?: string }): Promise<AuthResponse> {
+  async googleLogin(payload: { email?: string; full_name?: string; google_id?: string; credential?: string }): Promise<AuthResponse> {
     const res = await apiClient.post<AuthResponse>('/auth/google', payload);
     if (res.data.access_token) {
       localStorage.setItem('access_token', res.data.access_token);

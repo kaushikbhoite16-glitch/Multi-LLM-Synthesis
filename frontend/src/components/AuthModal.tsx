@@ -55,22 +55,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     try {
       if (mode === 'login' || mode === 'admin') {
-        await login(email, password);
+        await login(email.trim(), password);
         onClose();
       } else if (mode === 'signup') {
-        await signUp(email, password, fullName);
+        await signUp(email.trim(), password, fullName.trim() || undefined);
         onClose();
       } else if (mode === 'forgot') {
-        const res = await apiService.forgotPassword(email);
-        setSuccess(res.message);
+        const res = await apiService.forgotPassword(email.trim());
+        setSuccess(res.message || 'If an account exists, a reset token was created.');
         if (res.reset_token) {
           setResetToken(res.reset_token);
-          setMode('reset');
         }
+        // Transition to reset mode after a brief delay or let user enter token
+        setMode('reset');
       } else if (mode === 'reset') {
-        const res = await apiService.resetPassword(resetToken, newPassword);
-        setSuccess(res.message);
-        setTimeout(() => setMode('login'), 1500);
+        const res = await apiService.resetPassword(resetToken.trim(), newPassword);
+        setSuccess(res.message || 'Password updated successfully! Redirecting to sign in...');
+        setTimeout(() => {
+          setMode('login');
+          setSuccess(null);
+          setPassword('');
+          setNewPassword('');
+          setResetToken('');
+        }, 1500);
       }
     } catch (err: any) {
       setError(err?.response?.data?.detail || err.message || 'Operation failed.');
@@ -81,19 +88,47 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleGoogleAuth = async () => {
     setError(null);
-    if (!email || !email.trim() || !email.includes('@')) {
-      setError('Please enter your Google account email address above before continuing with Google.');
-      return;
-    }
     setIsLoading(true);
-    try {
-      await googleLogin(undefined, email.trim(), fullName || undefined);
-      onClose();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || err.message || 'Google authentication failed.');
-    } finally {
-      setIsLoading(false);
+
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    // Check if Google GSI SDK is available on window
+    if (typeof (window as any).google !== 'undefined' && (window as any).google.accounts?.id) {
+      if (googleClientId) {
+        try {
+          (window as any).google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: async (response: any) => {
+              if (response.credential) {
+                try {
+                  await googleLogin(response.credential);
+                  onClose();
+                } catch (err: any) {
+                  setError(err?.response?.data?.detail || err.message || 'Google sign-in failed on server.');
+                } finally {
+                  setIsLoading(false);
+                }
+              }
+            }
+          });
+          (window as any).google.accounts.id.prompt((notification: any) => {
+            if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+              setIsLoading(false);
+              setError('Google prompt was closed or blocked. Please allow third-party sign-in.');
+            }
+          });
+          return;
+        } catch (initErr: any) {
+          console.warn('Google GSI init failed:', initErr);
+        }
+      }
     }
+
+    // If Google Client ID is not configured on this frontend build or GSI is blocked:
+    setIsLoading(false);
+    setError(
+      'Google Sign-In requires VITE_GOOGLE_CLIENT_ID configured in Vercel environment variables and authorized on Google Cloud Console.'
+    );
   };
 
   const isAdminMode = mode === 'admin';
@@ -142,8 +177,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {isAdminMode && 'Authenticate with your administrator credentials to access system management.'}
             {mode === 'login' && 'Sign in to access your questions, benchmark history, and custom syntheses.'}
             {mode === 'signup' && 'Join the Multi-LLM research experimentation and synthesis platform.'}
-            {mode === 'forgot' && 'Enter your registered email to receive a password recovery token.'}
-            {mode === 'reset' && 'Enter the reset token and your new secure password.'}
+            {mode === 'forgot' && 'Enter your registered email address to generate a recovery token.'}
+            {mode === 'reset' && 'Enter your recovery token and new password to restore account access.'}
           </p>
         </div>
 
@@ -238,7 +273,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   required
                   value={resetToken}
                   onChange={(e) => setResetToken(e.target.value)}
-                  placeholder="Paste token received"
+                  placeholder="Paste recovery token received"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
                 />
               </div>
@@ -277,7 +312,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               : mode === 'signup'
               ? 'Create Account'
               : mode === 'forgot'
-              ? 'Send Reset Token'
+              ? 'Generate Recovery Token'
               : 'Update Password'}
           </button>
         </form>
@@ -365,6 +400,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <span>Administrator Login</span>
               </button>
             </>
+          ) : mode === 'forgot' || mode === 'reset' ? (
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('login');
+                  setError(null);
+                  setSuccess(null);
+                }}
+                className="text-sky-400 hover:text-sky-300 font-semibold"
+              >
+                &larr; Back to Sign In
+              </button>
+              {mode === 'forgot' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('reset');
+                    setError(null);
+                    setSuccess(null);
+                  }}
+                  className="text-slate-400 hover:text-white"
+                >
+                  Already have a token?
+                </button>
+              )}
+            </div>
           ) : (
             <p>
               Already have an account?{' '}

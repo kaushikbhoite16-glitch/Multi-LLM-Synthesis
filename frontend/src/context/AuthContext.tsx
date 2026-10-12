@@ -60,8 +60,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const googleLogin = async (credential?: string, email?: string, fullName?: string) => {
     const authData = await apiService.googleLogin({
       credential,
-      email: email || 'user@gmail.com',
-      full_name: fullName || 'Google User'
+      email,
+      full_name: fullName
     });
     setToken(authData.access_token);
     setUser(authData.user);

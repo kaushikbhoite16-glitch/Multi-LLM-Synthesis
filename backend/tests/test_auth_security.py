@@ -357,3 +357,67 @@ async def test_weak_password_rejected_on_signup():
         assert resp.status_code == 400, (
             f"Expected 400 for weak password but got {resp.status_code}: {resp.text}"
         )
+
+
+# ---------------------------------------------------------------------------
+# 13. Signup then immediate login with same credentials succeeds
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_signup_then_immediate_login_same_credentials():
+    """Verify signup persists and subsequent sign-in with identical credentials succeeds."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        email = _make_unique_email()
+        password = "ProductionPassword2026!"
+
+        # Step 1: Signup
+        signup_res = await client.post("/api/auth/signup", json={
+            "email": email,
+            "password": password,
+            "full_name": "Immediate Login Test"
+        })
+        assert signup_res.status_code == 200, f"Signup failed: {signup_res.text}"
+        signup_data = signup_res.json()
+        assert signup_data["user"]["email"] == email
+
+        # Step 2: Login with exact same credentials
+        login_res = await client.post("/api/auth/login", json={
+            "email": email,
+            "password": password
+        })
+        assert login_res.status_code == 200, f"Login failed: {login_res.text}"
+        login_data = login_res.json()
+        assert login_data["user"]["email"] == email
+        assert "access_token" in login_data
+
+
+# ---------------------------------------------------------------------------
+# 14. Google OAuth credential token parsing and account creation
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_google_oauth_credential_token_authentication():
+    """Verify backend parses Google ID token claims and creates/logs in user."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        google_email = f"google_user_{uuid.uuid4().hex[:6]}@gmail.com"
+        # Simulate a Google ID token payload
+        google_token = pyjwt.encode({
+            "sub": "google-id-123456789",
+            "email": google_email,
+            "name": "Google Verified User",
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        }, "dummy-google-cert-key", algorithm="HS256")
+
+        # Submit credential token
+        oauth_res = await client.post("/api/auth/google", json={
+            "credential": google_token
+        })
+        assert oauth_res.status_code == 200, f"Google OAuth failed: {oauth_res.text}"
+        oauth_data = oauth_res.json()
+        assert oauth_data["user"]["email"] == google_email
+        assert oauth_data["user"]["full_name"] == "Google Verified User"
+        assert "access_token" in oauth_data
+
+        # Authenticate with returned access_token on /auth/me
+        me_res = await client.get("/api/auth/me", headers={"Authorization": f"Bearer {oauth_data['access_token']}"})
+        assert me_res.status_code == 200
+        assert me_res.json()["email"] == google_email
+

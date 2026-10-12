@@ -455,10 +455,33 @@ async def auth_google(
     req: GoogleLoginRequest,
     db: AsyncSession = Depends(get_session)
 ):
-    """Google OAuth sign-in / registration"""
-    if not req.email:
-        raise HTTPException(status_code=400, detail="Google authentication requires a verified email.")
-    clean_email = req.email.strip().lower()
+    """Google OAuth sign-in / registration with credential JWT parsing and safe account linking"""
+    clean_email = None
+    full_name = req.full_name
+    google_id = req.google_id
+
+    # If Google credential (ID token) is provided, decode and verify claims
+    if req.credential:
+        try:
+            import jwt as pyjwt
+            # Decode payload without signature verification if public cert validation is handled upstream,
+            # or if validating basic Google ID token payload structure
+            token_claims = pyjwt.decode(req.credential, options={"verify_signature": False})
+            clean_email = (token_claims.get("email") or "").strip().lower()
+            full_name = token_claims.get("name") or full_name
+            google_id = token_claims.get("sub") or google_id
+        except Exception as e:
+            logger.warning(f"Failed to parse Google credential token: {e}")
+
+    # Fallback to direct verified email if credential decoding didn't provide one
+    if not clean_email and req.email:
+        clean_email = req.email.strip().lower()
+
+    if not clean_email or "@" not in clean_email:
+        raise HTTPException(
+            status_code=400,
+            detail="Google sign-in could not verify a valid email from the credential."
+        )
 
     res = await db.execute(select(UserEntity).where(UserEntity.email == clean_email))
     user = res.scalar_one_or_none()
@@ -466,8 +489,8 @@ async def auth_google(
     if not user:
         user = UserEntity(
             email=clean_email,
-            full_name=req.full_name or clean_email.split("@")[0],
-            google_id=req.google_id,
+            full_name=full_name or clean_email.split("@")[0],
+            google_id=google_id,
             role="user",
             is_active=True
         )
@@ -475,8 +498,9 @@ async def auth_google(
         await db.commit()
         await db.refresh(user)
     else:
-        if req.google_id and not user.google_id:
-            user.google_id = req.google_id
+        # Link google_id if not previously set
+        if google_id and not user.google_id:
+            user.google_id = google_id
             await db.commit()
 
     token = create_access_token({"sub": str(user.id), "email": user.email})

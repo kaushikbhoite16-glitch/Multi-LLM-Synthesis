@@ -23,15 +23,26 @@ async def lifespan(app: FastAPI):
         
         async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
         async with async_session() as db:
-            res = await db.execute(select(User).where(User.email == settings.ADMIN_EMAIL.strip().lower()))
+            admin_email = settings.ADMIN_EMAIL.strip().lower()
+            res = await db.execute(select(User).where(User.email == admin_email))
             existing_admin = res.scalar_one_or_none()
             if existing_admin:
+                changed = False
                 if existing_admin.role != "admin":
                     existing_admin.role = "admin"
+                    changed = True
+                # Update password if ADMIN_PASSWORD is set and non-empty
+                if settings.ADMIN_PASSWORD:
+                    existing_admin.hashed_password = hash_password(settings.ADMIN_PASSWORD)
+                    changed = True
+                if not existing_admin.is_active:
+                    existing_admin.is_active = True
+                    changed = True
+                if changed:
                     await db.commit()
             else:
                 new_admin = User(
-                    email=settings.ADMIN_EMAIL.strip().lower(),
+                    email=admin_email,
                     hashed_password=hash_password(settings.ADMIN_PASSWORD),
                     full_name="System Administrator",
                     role="admin",
