@@ -90,7 +90,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setError(null);
     setIsLoading(true);
 
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const googleClientId =
+      import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+      '433984026052-916v6jmnvadde9tghu9irp42lf2rv4ui.apps.googleusercontent.com';
 
     // Check if Google GSI SDK is available on window
     if (typeof (window as any).google !== 'undefined' && (window as any).google.accounts?.id) {
