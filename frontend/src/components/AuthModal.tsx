@@ -81,9 +81,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleGoogleAuth = async () => {
     setError(null);
+    if (!email || !email.trim() || !email.includes('@')) {
+      setError('Please enter your Google account email address above before continuing with Google.');
+      return;
+    }
     setIsLoading(true);
     try {
-      await googleLogin(undefined, email || 'user@example.com', fullName || 'Google User');
+      await googleLogin(undefined, email.trim(), fullName || undefined);
       onClose();
     } catch (err: any) {
       setError(err?.response?.data?.detail || err.message || 'Google authentication failed.');

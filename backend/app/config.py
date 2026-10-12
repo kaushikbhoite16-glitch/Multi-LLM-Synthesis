@@ -34,7 +34,11 @@ class Settings(BaseSettings):
     MOCK_MODE: bool = os.getenv("MOCK_MODE", "false").lower() in ("true", "1", "yes")
 
     # Authentication & Security
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "multi-llm-super-secure-research-secret-key-2026")
+    # IMPORTANT: JWT_SECRET_KEY MUST be set as a secret environment variable in
+    # production (Render → Environment Variables). The default below is a dev-only
+    # fallback — tokens signed with it are easily forged by anyone who can read
+    # this repository. Any production deployment without this env var set is insecure.
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "dev-only-insecure-key-CHANGE-IN-PRODUCTION")
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
@@ -43,6 +47,8 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
 
     # Administrator Initial Account
+    # Set ADMIN_EMAIL and ADMIN_PASSWORD as environment variables in production.
+    # The defaults below are acceptable fallbacks for local development only.
     ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "admin@multilllm.ai")
     ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "Admin@SecurePass2025!")
 
