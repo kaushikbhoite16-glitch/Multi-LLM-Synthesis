@@ -12,7 +12,23 @@ import {
   AdminUserItem
 } from '../types';
 
-const API_BASE = '/api';
+// Determine API Base URL dynamically:
+// 1. If import.meta.env.VITE_API_BASE_URL is set, use it (ensuring no trailing slash and adding /api if needed)
+// 2. In production (e.g. deployed on Vercel), default to the live Render backend: https://multi-llm-synthesis.onrender.com/api
+// 3. In local development, default to '/api' to leverage Vite dev proxy
+const getBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
+    const trimmed = envUrl.trim().replace(/\/+$/, '');
+    return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+  }
+  if (import.meta.env.PROD) {
+    return 'https://multi-llm-synthesis.onrender.com/api';
+  }
+  return '/api';
+};
+
+const API_BASE = getBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: API_BASE,
@@ -158,7 +174,7 @@ export const apiService = {
   },
 
   getExportUrl(format: 'json' | 'csv'): string {
-    return `/api/export?format=${format}`;
+    return `${API_BASE}/export?format=${format}`;
   },
 
   // Administrator Endpoints

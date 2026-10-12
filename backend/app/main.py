@@ -12,6 +12,37 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing database schema...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    # Ensure administrator user exists and has admin role
+    try:
+        from sqlalchemy.orm import sessionmaker
+        from sqlalchemy.ext.asyncio import AsyncSession
+        from sqlalchemy import select
+        from app.models.entities import User
+        from app.utils.security import hash_password
+        
+        async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        async with async_session() as db:
+            res = await db.execute(select(User).where(User.email == settings.ADMIN_EMAIL.strip().lower()))
+            existing_admin = res.scalar_one_or_none()
+            if existing_admin:
+                if existing_admin.role != "admin":
+                    existing_admin.role = "admin"
+                    await db.commit()
+            else:
+                new_admin = User(
+                    email=settings.ADMIN_EMAIL.strip().lower(),
+                    hashed_password=hash_password(settings.ADMIN_PASSWORD),
+                    full_name="System Administrator",
+                    role="admin",
+                    is_active=True
+                )
+                db.add(new_admin)
+                await db.commit()
+        logger.info(f"Administrator account verified: {settings.ADMIN_EMAIL}")
+    except Exception as e:
+        logger.warning(f"Administrator auto-seed notice: {e}")
+
     logger.info(f"Database schema initialized successfully. Mock mode: {settings.MOCK_MODE or not bool(settings.OPENROUTER_API_KEY)}")
     yield
     await engine.dispose()
