@@ -2,18 +2,45 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
+
+def _normalize_database_url(url: str) -> str:
+    """
+    Normalize the DATABASE_URL to use the correct SQLAlchemy async driver.
+
+    Render's managed PostgreSQL service provides the connection URL as
+    'postgres://...' or 'postgresql://...'. SQLAlchemy's create_async_engine
+    with a bare 'postgresql://' scheme selects psycopg (psycopg3) as the
+    default async dialect. Since only asyncpg is installed, this causes
+    ModuleNotFoundError: No module named 'psycopg'.
+
+    This function rewrites any bare PostgreSQL scheme to 'postgresql+asyncpg://'
+    so that the installed asyncpg driver is always selected for PostgreSQL
+    connections. SQLite URLs are left unchanged.
+    """
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # Already has a driver specifier (e.g. postgresql+asyncpg://, sqlite+aiosqlite://)
+    return url
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="allow")
-    
+
     PROJECT_NAME: str = "Multi-LLM Response Evaluation and Adaptive Answer Synthesis"
     API_V1_STR: str = "/api"
-    
+
     # LLM Gateway
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
-    
+
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./multi_llm.db")
+    # Normalise the URL immediately so every consumer (session.py, alembic env.py,
+    # health endpoint) always sees the correct driver specifier.
+    DATABASE_URL: str = _normalize_database_url(
+        os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./multi_llm.db")
+    )
     
     # Defaults
     DEFAULT_EVALUATOR_MODEL: str = os.getenv("DEFAULT_EVALUATOR_MODEL", "openai/gpt-4o-mini")
