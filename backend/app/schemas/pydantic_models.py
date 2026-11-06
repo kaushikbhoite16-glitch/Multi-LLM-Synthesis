@@ -78,9 +78,11 @@ class NormalizedResponse(BaseModel):
     total_tokens: int = 0
     cost: float = 0.0
     latency_ms: int = 0
-    status: str = "success"  # success, error, timeout
+    status: str = "success"  # success, error, timeout, mock_fallback
     generation_id: Optional[str] = None
     error_message: Optional[str] = None
+    is_fallback: bool = False
+    execution_mode: str = "live"  # live, simulation, mock_fallback
     timestamp: Optional[str] = None
 
 
@@ -146,6 +148,8 @@ class SynthesisResult(BaseModel):
     cost: float = 0.0
     latency_ms: int = 0
     status: str = "success"
+    is_fallback: bool = False
+    execution_mode: str = "live"  # live, simulation, mock_fallback
 
 
 class FinalEvaluationResult(BaseModel):
@@ -190,7 +194,11 @@ class PipelineRunResponse(BaseModel):
     total_pipeline_cost: float
     total_pipeline_latency_ms: int
     is_mock: bool = False
-    execution_mode: str = "live"
+    execution_mode: str = "live"  # live, partial, simulation, error
+    api_notice: Optional[str] = None
+    app_version: str = "2.1.0"
+    environment: str = "production"
+    trace_id: Optional[str] = None
 
 
 class HumanEvaluationRequest(BaseModel):

@@ -54,3 +54,15 @@ Desktop.ini
 *.log
 logs/
 experiments/results/scratch/
+
+# Temporary presentation and screening artifacts
+*.pptx
+*.pptx.bak
+*.pdf
+build_fixed_pptx.py
+generate_presentation*.py
+default_test.pptx
+note_test.pptx
+docs/Multi_LLM_Project_Presentation.html
+docs/Project_Mentor_Screening_Report.html
+docs/Project_Mentor_Screening_Report.md

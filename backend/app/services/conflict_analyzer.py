@@ -57,7 +57,7 @@ class ConflictAnalyzer:
         """
         log_stage("conflict", "Analyzing agreement and contradictions across candidates", candidate_count=len(candidates))
         
-        valid_candidates = [c for c in candidates if c.status == "success" and c.response_text]
+        valid_candidates = [c for c in candidates if c.status in ("success", "mock_fallback") and c.response_text]
         if len(valid_candidates) < 2:
             return ConflictAnalysisResult(
                 topic=query[:80],

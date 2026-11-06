@@ -42,6 +42,8 @@ export interface NormalizedResponse {
   status: string;
   generation_id?: string;
   error_message?: string;
+  is_fallback?: boolean;
+  execution_mode?: string;
 }
 
 export interface EvaluationResult {
@@ -140,7 +142,11 @@ export interface PipelineRunResponse {
   total_pipeline_cost: number;
   total_pipeline_latency_ms: number;
   is_mock: boolean;
-  execution_mode?: 'live' | 'simulation';
+  execution_mode?: 'live' | 'partial' | 'simulation' | 'error';
+  api_notice?: string;
+  app_version?: string;
+  environment?: string;
+  trace_id?: string;
 }
 
 export interface User {

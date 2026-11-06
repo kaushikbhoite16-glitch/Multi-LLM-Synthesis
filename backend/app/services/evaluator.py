@@ -135,7 +135,7 @@ class ResponseEvaluator:
         tasks = [
             self.evaluate_single(query, preferences, cand, evaluator_model, force_mock=force_mock)
             for cand in candidates
-            if cand.status == "success" and cand.response_text
+            if cand.status in ("success", "mock_fallback") and cand.response_text
         ]
         return await asyncio.gather(*tasks)
 
@@ -188,11 +188,30 @@ class ResponseEvaluator:
         if word_count > 500:
             conc -= 0.6  # penalty for excessive verbosity
 
-        # Query keywords overlap
-        q_tokens = set(re.findall(r"\w{4,}", query.lower()))
-        ans_tokens = set(re.findall(r"\w{4,}", text.lower()))
-        overlap = len(q_tokens.intersection(ans_tokens)) / max(len(q_tokens), 1)
-        rel = min(10.0, max(5.0, 7.0 + overlap * 3.0))
+        # Query keywords overlap and semantic alignment
+        STOP_WORDS = {
+            "what", "is", "a", "an", "the", "in", "and", "or", "to", "of", "for",
+            "with", "how", "does", "explain", "between", "why", "can", "you", "tell",
+            "me", "about", "give", "example"
+        }
+        raw_q_words = re.findall(r"[a-zA-Z0-9_+#]{2,}", query.lower())
+        q_tokens = set(w for w in raw_q_words if w not in STOP_WORDS)
+        if not q_tokens:
+            q_tokens = set(raw_q_words)
+        
+        ans_tokens = set(re.findall(r"[a-zA-Z0-9_+#]{2,}", text.lower()))
+        
+        if q_tokens:
+            overlap = len(q_tokens.intersection(ans_tokens)) / len(q_tokens)
+            if overlap == 0.0:
+                # Strict penalty for completely off-topic hallucinated or canned text
+                rel = 1.5
+                corr = 3.0
+                comp = 2.0
+            else:
+                rel = min(10.0, max(4.0, 6.0 + overlap * 4.0))
+        else:
+            rel = 8.5
 
         # Clamp all scores to 0-10
         scores = {

@@ -1,4 +1,6 @@
 import time
+import uuid
+import os
 from typing import List, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
@@ -45,6 +47,18 @@ class PipelineOrchestrator:
 
     async def execute_pipeline(self, req: PipelineRunRequest, user_id: Optional[int] = None) -> PipelineRunResponse:
         total_pipeline_start = time.perf_counter()
+        trace_id = f"trace-{uuid.uuid4().hex[:12]}"
+        env_name = "production" if "render" in settings.DATABASE_URL or os.getenv("RENDER") else "development"
+        
+        log_stage(
+            "pipeline_trace",
+            "Trace initialized",
+            trace_id=trace_id,
+            env=env_name,
+            version="2.1.0",
+            query_preview=req.query[:60].strip(),
+            req_mode=req.execution_mode or "live"
+        )
         
         # Determine mode
         is_simulation = req.execution_mode == "simulation" or not self.openrouter.has_api_key() or settings.MOCK_MODE
@@ -77,8 +91,8 @@ class PipelineOrchestrator:
             force_mock=force_mock
         )
 
-        # Filter out hard failures for evaluation, but keep error records
-        valid_candidates = [c for c in candidates if c.status == "success" and c.response_text]
+        # Filter out hard failures for evaluation, but keep valid responses and mock fallbacks
+        valid_candidates = [c for c in candidates if c.status in ("success", "mock_fallback") and c.response_text]
         if not valid_candidates:
             raise RuntimeError("All candidate models failed to generate valid responses.")
 
@@ -138,10 +152,41 @@ class PipelineOrchestrator:
             force_mock=force_mock
         )
 
+        # Determine actual execution mode based on model execution status
+        any_fallback = any(c.is_fallback or c.execution_mode == "mock_fallback" for c in candidates) or synthesis.is_fallback
+        all_fallback = all(c.is_fallback or c.execution_mode in ("mock_fallback", "simulation") for c in candidates) and synthesis.is_fallback
+
+        if is_simulation or all_fallback:
+            effective_execution_mode = "simulation"
+            is_mock_run = True
+        elif any_fallback:
+            effective_execution_mode = "partial"
+            is_mock_run = False
+        else:
+            effective_execution_mode = "live"
+            is_mock_run = False
+
+        # Construct user-facing API status notice
+        api_notice = None
+        if effective_execution_mode == "simulation":
+            if self.openrouter.has_api_key() and not settings.MOCK_MODE and req.execution_mode != "simulation":
+                cand_err = next((c.error_message for c in candidates if c.error_message), "API key expired or invalid (HTTP 401)")
+                api_notice = f"Notice: OpenRouter API key failed ({cand_err}). System safely fell back to High-Fidelity Domain Simulation Engine."
+            elif not self.openrouter.has_api_key():
+                api_notice = "Notice: Running in Simulation Mode (No OpenRouter API key configured in backend .env)."
+        elif effective_execution_mode == "partial":
+            cand_err = next((c.error_message for c in candidates if c.error_message), "Some API calls encountered limitations")
+            api_notice = f"Notice: Partial Live API execution. Some candidate models fell back to simulation ({cand_err})."
+
         # Total Resource Aggregates
         pipeline_tokens = sum(c.total_tokens for c in candidates) + synthesis.total_tokens
-        # In simulation mode, actual API cost is 0.00
-        pipeline_cost = 0.0 if is_simulation else round(sum(c.cost for c in candidates) + synthesis.cost, 6)
+        # In simulation mode, actual API expenditure is $0.00
+        if effective_execution_mode == "simulation":
+            pipeline_cost = 0.0
+        else:
+            genuine_cand_cost = sum(c.cost for c in candidates if not c.is_fallback)
+            genuine_synth_cost = 0.0 if synthesis.is_fallback else synthesis.cost
+            pipeline_cost = round(genuine_cand_cost + genuine_synth_cost, 6)
         total_latency_ms = int((time.perf_counter() - total_pipeline_start) * 1000)
 
         # 10. Research Storage in Database
@@ -152,7 +197,7 @@ class PipelineOrchestrator:
                 q_entity = QueryEntity(
                     user_id=user_id,
                     title=title_preview,
-                    execution_mode="simulation" if is_simulation else "live",
+                    execution_mode=effective_execution_mode,
                     query_text=req.query,
                     query_type=analysis.query_type,
                     domain=analysis.domain,
@@ -273,7 +318,19 @@ class PipelineOrchestrator:
                 log_stage("pipeline", f"Database persistence note: {e}")
                 await self.db.rollback()
 
-        log_stage("pipeline", "Complete pipeline finished successfully", elapsed=f"{total_latency_ms}ms")
+        log_stage(
+            "pipeline_summary",
+            "Pipeline completed",
+            trace_id=trace_id,
+            query_id=query_id_placeholder,
+            mode=effective_execution_mode,
+            synthesis_status=synthesis.status,
+            relevance=final_eval.relevance,
+            overall_score=final_eval.overall_score,
+            cost=f"${pipeline_cost:.6f}",
+            tokens=pipeline_tokens,
+            latency=f"{total_latency_ms}ms"
+        )
 
         return PipelineRunResponse(
             query_id=query_id_placeholder,
@@ -289,6 +346,10 @@ class PipelineOrchestrator:
             total_pipeline_tokens=pipeline_tokens,
             total_pipeline_cost=pipeline_cost,
             total_pipeline_latency_ms=total_latency_ms,
-            is_mock=is_simulation,
-            execution_mode="simulation" if is_simulation else "live"
+            is_mock=is_mock_run,
+            execution_mode=effective_execution_mode,
+            api_notice=api_notice,
+            app_version="2.1.0",
+            environment=env_name,
+            trace_id=trace_id
         )

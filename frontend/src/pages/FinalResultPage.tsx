@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { PipelineRunResponse } from '../types';
 import { ComparisonTable } from '../components/ComparisonTable';
 import { ConflictViewer } from '../components/ConflictViewer';
@@ -60,11 +62,17 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
             <span
               className={`text-[11px] font-mono uppercase px-2.5 py-0.5 rounded-full border ${
                 result.execution_mode === 'simulation' || result.is_mock
+                  ? 'bg-purple-500/10 text-purple-300 border-purple-500/20'
+                  : result.execution_mode === 'partial'
                   ? 'bg-amber-500/10 text-amber-300 border-amber-500/20'
                   : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
               }`}
             >
-              {result.execution_mode === 'simulation' || result.is_mock ? 'SIMULATION MODE' : 'LIVE API (GENUINE)'}
+              {result.execution_mode === 'simulation' || result.is_mock
+                ? 'SIMULATION MODE'
+                : result.execution_mode === 'partial'
+                ? 'PARTIAL LIVE / FALLBACK'
+                : 'LIVE API (GENUINE)'}
             </span>
             <span className="text-xs text-slate-400 font-mono hidden md:inline">
               Domain: {result.analysis.domain} | Difficulty: {result.analysis.difficulty}
@@ -83,6 +91,17 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
           <span>New Exploration</span>
         </button>
       </div>
+
+      {/* Optional Diagnostic / Telemetry Notice Banner */}
+      {result.api_notice && (
+        <div className="bg-amber-950/30 border border-amber-600/30 text-amber-200 text-xs px-4 py-3 rounded-2xl flex items-start space-x-2.5">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="leading-relaxed">
+            <span className="font-semibold text-amber-300">Execution Telemetry: </span>
+            {result.api_notice}
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -123,8 +142,8 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
           </div>
           <div className="text-lg font-bold font-mono text-amber-400">
             {result.execution_mode === 'simulation' || result.is_mock
-              ? '$0.00'
-              : `$${result.total_pipeline_cost.toFixed(5)}`}
+              ? '$0.000000 (Simulated)'
+              : `$${result.total_pipeline_cost.toFixed(6)}`}
           </div>
         </div>
 
@@ -247,9 +266,56 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
               </button>
             </div>
 
-            {/* Answer Text */}
-            <div className="prose prose-invert max-w-none text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-sans">
-              {result.synthesis.final_response}
+            {/* Answer Text Rendered as Rich Styled Markdown */}
+            <div className="text-slate-200 text-sm leading-relaxed font-sans">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({ node, ...props }) => <h1 className="text-xl font-bold text-white mt-6 mb-3 border-b border-slate-800 pb-2" {...props} />,
+                  h2: ({ node, ...props }) => <h2 className="text-lg font-bold text-sky-400 mt-5 mb-2.5" {...props} />,
+                  h3: ({ node, ...props }) => <h3 className="text-base font-semibold text-indigo-300 mt-4 mb-2" {...props} />,
+                  h4: ({ node, ...props }) => <h4 className="text-sm font-semibold text-slate-200 mt-3 mb-1.5" {...props} />,
+                  p: ({ node, ...props }) => <p className="mb-3.5 leading-relaxed text-slate-300" {...props} />,
+                  strong: ({ node, ...props }) => <strong className="font-semibold text-white" {...props} />,
+                  em: ({ node, ...props }) => <em className="italic text-slate-300" {...props} />,
+                  ul: ({ node, ...props }) => <ul className="list-disc list-outside pl-5 mb-3.5 space-y-1 text-slate-300" {...props} />,
+                  ol: ({ node, ...props }) => <ol className="list-decimal list-outside pl-5 mb-3.5 space-y-1 text-slate-300" {...props} />,
+                  li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
+                  blockquote: ({ node, ...props }) => (
+                    <blockquote className="border-l-4 border-sky-500 pl-4 py-1.5 my-3 bg-slate-800/40 rounded-r text-slate-300 italic" {...props} />
+                  ),
+                  code: ({ node, inline, className, children, ...props }: any) => {
+                    if (inline) {
+                      return (
+                        <code className="px-1.5 py-0.5 rounded bg-slate-800 text-sky-300 font-mono text-xs border border-slate-700/60" {...props}>
+                          {children}
+                        </code>
+                      );
+                    }
+                    return (
+                      <div className="my-4 rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+                        <div className="bg-slate-900/90 px-4 py-1.5 text-[11px] font-mono text-slate-400 border-b border-slate-800 flex justify-between items-center">
+                          <span>Code Example</span>
+                        </div>
+                        <pre className="p-4 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed">
+                          <code {...props}>{children}</code>
+                        </pre>
+                      </div>
+                    );
+                  },
+                  table: ({ node, ...props }) => (
+                    <div className="my-4 overflow-x-auto rounded-xl border border-slate-800">
+                      <table className="min-w-full divide-y divide-slate-800 text-xs" {...props} />
+                    </div>
+                  ),
+                  thead: ({ node, ...props }) => <thead className="bg-slate-800/60 text-slate-200 font-semibold" {...props} />,
+                  th: ({ node, ...props }) => <th className="px-3.5 py-2 text-left font-semibold text-slate-200" {...props} />,
+                  td: ({ node, ...props }) => <td className="px-3.5 py-2 border-t border-slate-800/60 text-slate-300" {...props} />,
+                  hr: ({ node, ...props }) => <hr className="border-slate-800 my-6" {...props} />,
+                }}
+              >
+                {result.synthesis.final_response}
+              </ReactMarkdown>
             </div>
 
             {/* Validation Reasoning Footer */}
@@ -282,6 +348,15 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
                     <Cpu className="w-4 h-4 text-sky-400" />
                     <span className="font-semibold text-xs text-white">{cand.model}</span>
                     <span className="text-[10px] text-slate-400 font-mono">({cand.provider})</span>
+                    {cand.is_fallback || cand.execution_mode === 'mock_fallback' ? (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                        SIMULATED
+                      </span>
+                    ) : cand.execution_mode === 'live' ? (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        LIVE
+                      </span>
+                    ) : null}
                   </div>
                   <button
                     onClick={() => handleCopyCandidate(cand.response_id, cand.response_text)}
@@ -295,9 +370,45 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap max-h-80 overflow-y-auto no-scrollbar">
-                  {cand.response_text}
-                </p>
+                <div className="text-xs text-slate-300 leading-relaxed max-h-80 overflow-y-auto no-scrollbar space-y-2">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h1: ({ node, ...props }) => <h1 className="text-sm font-bold text-white mt-2 mb-1" {...props} />,
+                      h2: ({ node, ...props }) => <h2 className="text-xs font-bold text-sky-400 mt-2 mb-1" {...props} />,
+                      h3: ({ node, ...props }) => <h3 className="text-xs font-semibold text-indigo-300 mt-1.5 mb-1" {...props} />,
+                      p: ({ node, ...props }) => <p className="mb-2 leading-relaxed text-slate-300" {...props} />,
+                      strong: ({ node, ...props }) => <strong className="font-semibold text-white" {...props} />,
+                      em: ({ node, ...props }) => <em className="italic text-slate-300" {...props} />,
+                      ul: ({ node, ...props }) => <ul className="list-disc list-outside pl-4 mb-2 space-y-0.5 text-slate-300" {...props} />,
+                      ol: ({ node, ...props }) => <ol className="list-decimal list-outside pl-4 mb-2 space-y-0.5 text-slate-300" {...props} />,
+                      li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
+                      code: ({ node, inline, className, children, ...props }: any) => {
+                        if (inline) {
+                          return (
+                            <code className="px-1 py-0.5 rounded bg-slate-800 text-sky-300 font-mono text-[11px]" {...props}>
+                              {children}
+                            </code>
+                          );
+                        }
+                        return (
+                          <pre className="p-2.5 my-2 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-emerald-300 overflow-x-auto">
+                            <code {...props}>{children}</code>
+                          </pre>
+                        );
+                      },
+                      table: ({ node, ...props }) => (
+                        <div className="my-2 overflow-x-auto rounded-lg border border-slate-800">
+                          <table className="min-w-full divide-y divide-slate-800 text-[11px]" {...props} />
+                        </div>
+                      ),
+                      th: ({ node, ...props }) => <th className="px-2 py-1 text-left font-semibold text-slate-200" {...props} />,
+                      td: ({ node, ...props }) => <td className="px-2 py-1 border-t border-slate-800/60 text-slate-300" {...props} />,
+                    }}
+                  >
+                    {cand.response_text}
+                  </ReactMarkdown>
+                </div>
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
