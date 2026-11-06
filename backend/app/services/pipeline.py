@@ -24,6 +24,8 @@ from app.services.conflict_analyzer import ConflictAnalyzer
 from app.services.context_builder import ContextBuilder
 from app.services.synthesizer import SynthesizerService
 from app.services.final_evaluator import FinalEvaluator
+from app.rag.hybrid_retriever import hybrid_retriever
+from app.rag.evidence_scorer import evidence_scorer
 from app.models.entities import (
     Query as QueryEntity,
     Preference as PreferenceEntity,
@@ -31,9 +33,11 @@ from app.models.entities import (
     Evaluation as EvaluationEntity,
     Conflict as ConflictEntity,
     SynthesisRun as SynthesisRunEntity,
-    FinalEvaluation as FinalEvaluationEntity
+    FinalEvaluation as FinalEvaluationEntity,
+    RetrievalLog as RetrievalLogEntity
 )
-from app.utils.logger import log_stage
+from app.utils.logger import log_stage, logger
+
 
 class PipelineOrchestrator:
     def __init__(self, db: Optional[AsyncSession] = None):
@@ -79,6 +83,21 @@ class PipelineOrchestrator:
             force_mock=force_mock
         )
 
+        # 2.5. Hybrid RAG Retrieval across Knowledge Bases
+        evidence_chunks = []
+        rag_sources_used = []
+        if req.enable_rag:
+            log_stage("pipeline", "Executing Hybrid RAG Retrieval (General, Academic, Dynamic Web)")
+            try:
+                evidence_chunks = await hybrid_retriever.retrieve_evidence(
+                    query=req.query,
+                    sources=req.rag_sources,
+                    top_k=settings.RAG_TOP_K_PER_SOURCE
+                )
+                rag_sources_used = list({e["source_type"] for e in evidence_chunks})
+            except Exception as e:
+                logger.warning(f"Hybrid retrieval stage encountered an issue: {e}")
+
         # 3. Parallel Multi-LLM Generation via OpenRouter
         log_stage("pipeline", f"Executing parallel model calls (mode={'simulation' if is_simulation else 'live'})", count=len(models))
         messages = [
@@ -106,12 +125,24 @@ class PipelineOrchestrator:
             force_mock=force_mock
         )
 
-        # 5. Multi-Criteria Scoring & Ranking with Resource Penalties
-        log_stage("pipeline", "Ranking candidates with composite scoring")
+        # 5. Multi-Criteria Scoring & Ranking with Evidence Grounding & Resource Penalties
+        log_stage("pipeline", "Ranking candidates with evidence-grounded composite scoring")
+        evidence_rankings = []
+        if evidence_chunks:
+            try:
+                evidence_rankings = evidence_scorer.rank_candidates(
+                    query=req.query,
+                    candidates=valid_candidates,
+                    evidence_chunks=evidence_chunks
+                )
+            except Exception as e:
+                logger.warning(f"Evidence scoring warning: {e}")
+
         ranked_candidates: List[RankedResponse] = RankingEngine.rank_responses(
             candidates=valid_candidates,
             evaluations=evaluations,
-            preferences=preferences
+            preferences=preferences,
+            evidence_evaluations=evidence_rankings
         )
 
         # 6. Agreement & Conflict Analysis
@@ -128,10 +159,11 @@ class PipelineOrchestrator:
             query=req.query,
             ranked_candidates=ranked_candidates,
             conflicts=conflicts,
-            preferences=preferences
+            preferences=preferences,
+            evidence_chunks=evidence_chunks
         )
 
-        # 8. Adaptive Synthesis via Final LLM
+        # 8. Adaptive Synthesis via Final LLM with Inline Citations
         query_id_placeholder = int(time.time() * 1000) % 1_000_000
         synthesis: SynthesisResult = await self.synthesizer.synthesize(
             query_id=query_id_placeholder,
@@ -139,10 +171,12 @@ class PipelineOrchestrator:
             structured_context=structured_context,
             synthesis_model=synthesis_model,
             preferences=preferences,
+            evidence_chunks=evidence_chunks,
             force_mock=force_mock
         )
 
         # 9. Final Response Evaluation
+
         final_eval: FinalEvaluationResult = await self.final_evaluator.evaluate_final_response(
             query=req.query,
             synthesis=synthesis,
@@ -312,7 +346,19 @@ class PipelineOrchestrator:
                     improvement_pct=final_eval.improvement_pct
                 )
                 self.db.add(fev_entity)
+                # Retrieval Logs Record (if RAG was active)
+                if evidence_chunks:
+                    rlog = RetrievalLogEntity(
+                        query_id=q_entity.id,
+                        query_text=req.query,
+                        selected_sources=rag_sources_used,
+                        retrieved_chunk_ids=[ev.get("chunk_id", "") for ev in evidence_chunks],
+                        scores=[float(ev.get("relevance_score", 0.0)) for ev in evidence_chunks]
+                    )
+                    self.db.add(rlog)
+
                 await self.db.commit()
+
                 query_id_placeholder = q_entity.id
             except Exception as e:
                 log_stage("pipeline", f"Database persistence note: {e}")
@@ -351,5 +397,8 @@ class PipelineOrchestrator:
             api_notice=api_notice,
             app_version="2.1.0",
             environment=env_name,
-            trace_id=trace_id
+            trace_id=trace_id,
+            retrieved_evidence=evidence_chunks,
+            rag_sources_used=rag_sources_used
         )
+

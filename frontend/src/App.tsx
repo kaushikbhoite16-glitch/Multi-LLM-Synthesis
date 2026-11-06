@@ -10,7 +10,9 @@ import { ModelConfigPage } from './pages/ModelConfigPage';
 import { EvaluationConfigPage } from './pages/EvaluationConfigPage';
 import { HumanEvalPage } from './pages/HumanEvalPage';
 import { QuestionHistoryPage } from './pages/QuestionHistoryPage';
+import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
 import { AdminDashboard } from './pages/AdminDashboard';
+
 import { AuthModal } from './components/AuthModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { apiService } from './services/api';
@@ -143,6 +145,11 @@ const MainApp: React.FC = () => {
               onOpenAuth={() => handleOpenAuth('login')}
             />
           )}
+
+          {activeTab === 'knowledge-base' && (
+            <KnowledgeBasePage />
+          )}
+
 
           {activeTab === 'result' && latestResult && (
             <FinalResultPage

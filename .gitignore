@@ -10,6 +10,12 @@ backend/.env
 *.sqlite
 *.sqlite3
 backend/multi_llm.db
+backend/chroma_db/
+chroma_db/
+backend/data/documents/
+uploaded_documents/
+backend/uploaded_documents/
+
 
 # Python
 __pycache__/

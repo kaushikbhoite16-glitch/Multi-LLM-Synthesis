@@ -117,6 +117,9 @@ class RankedResponse(BaseModel):
     latency_ms: int
     criteria_scores: Dict[str, float]
     reasoning: str
+    evidence_score: Optional[float] = None
+    verified_claims: Optional[List[Dict[str, Any]]] = None
+    citations: Optional[List[str]] = None
 
 
 class ConflictItem(BaseModel):
@@ -150,6 +153,10 @@ class SynthesisResult(BaseModel):
     status: str = "success"
     is_fallback: bool = False
     execution_mode: str = "live"  # live, simulation, mock_fallback
+    citations: Optional[List[Dict[str, Any]]] = None
+    verified_claims: Optional[List[Dict[str, Any]]] = None
+    factuality_score: Optional[float] = None
+
 
 
 class FinalEvaluationResult(BaseModel):
@@ -177,6 +184,8 @@ class PipelineRunRequest(BaseModel):
     preferences: Optional[UserPreferenceSchema] = None
     scoring_mode: Optional[str] = "quality-first"
     execution_mode: Optional[str] = "live"  # "live" or "simulation"
+    enable_rag: Optional[bool] = True
+    rag_sources: Optional[List[str]] = None
 
 
 class PipelineRunResponse(BaseModel):
@@ -199,6 +208,9 @@ class PipelineRunResponse(BaseModel):
     app_version: str = "2.1.0"
     environment: str = "production"
     trace_id: Optional[str] = None
+    retrieved_evidence: Optional[List[Dict[str, Any]]] = None
+    rag_sources_used: Optional[List[str]] = None
+
 
 
 class HumanEvaluationRequest(BaseModel):

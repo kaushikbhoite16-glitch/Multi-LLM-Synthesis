@@ -192,5 +192,54 @@ export const apiService = {
   async toggleUserStatus(userId: number, isActive: boolean): Promise<{ message: string; user_id: number; is_active: boolean }> {
     const res = await apiClient.patch(`/admin/users/${userId}/status`, { is_active: isActive });
     return res.data;
+  },
+
+  // Hybrid RAG & Knowledge Base Endpoints
+  async getRagStats(): Promise<any> {
+    const res = await apiClient.get('/rag/stats');
+    return res.data;
+  },
+
+  async getRagDocuments(): Promise<{ count: number; documents: any[] }> {
+    const res = await apiClient.get('/rag/documents');
+    return res.data;
+  },
+
+  async uploadRagDocument(formData: FormData): Promise<any> {
+    const res = await apiClient.post('/rag/documents/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return res.data;
+  },
+
+  async deleteRagDocument(documentId: string): Promise<any> {
+    const res = await apiClient.delete(`/rag/documents/${encodeURIComponent(documentId)}`);
+    return res.data;
+  },
+
+  async searchAcademicPapers(query: string, providers?: string[], maxResultsPerProvider: number = 2): Promise<any> {
+    const res = await apiClient.post('/rag/academic/search', {
+      query,
+      providers,
+      max_results_per_provider: maxResultsPerProvider
+    });
+    return res.data;
+  },
+
+  async testRagRetrieval(query: string, sources?: string[], topK: number = 5): Promise<any> {
+    const res = await apiClient.post('/rag/retrieve', {
+      query,
+      sources,
+      top_k: topK
+    });
+    return res.data;
+  },
+
+  async pruneRagWebCache(): Promise<any> {
+    const res = await apiClient.post('/rag/prune');
+    return res.data;
   }
 };
+

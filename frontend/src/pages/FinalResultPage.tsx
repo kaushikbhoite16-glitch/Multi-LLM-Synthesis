@@ -21,7 +21,9 @@ import {
   TrendingUp,
   Cpu,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Database,
+  ExternalLink
 } from 'lucide-react';
 
 interface FinalResultPageProps {
@@ -30,7 +32,8 @@ interface FinalResultPageProps {
 }
 
 export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQuery }) => {
-  const [activeTab, setActiveTab] = useState<'answer' | 'candidates' | 'evaluations' | 'conflicts' | 'context' | 'resources'>('answer');
+  const [activeTab, setActiveTab] = useState<'answer' | 'candidates' | 'evaluations' | 'conflicts' | 'context' | 'resources' | 'evidence'>('answer');
+
   const [copiedAnswer, setCopiedAnswer] = useState(false);
   const [copiedCandidateId, setCopiedCandidateId] = useState<number | null>(null);
 
@@ -219,6 +222,18 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
         </button>
 
         <button
+          onClick={() => setActiveTab('evidence')}
+          className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            activeTab === 'evidence'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+        >
+          <Database className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Retrieved Evidence ({result.retrieved_evidence?.length ?? 0})</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('context')}
           className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             activeTab === 'context'
@@ -230,6 +245,7 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
           <span>Structured Context</span>
         </button>
       </div>
+
 
       {/* Tab 1: Prominent Final Synthesized Answer */}
       {activeTab === 'answer' && (
@@ -441,6 +457,65 @@ export const FinalResultPage: React.FC<FinalResultPageProps> = ({ result, onNewQ
           <StructuredContextViewer context={result.structured_context} />
         </div>
       )}
+
+      {/* Tab 6: Retrieved Hybrid RAG Evidence */}
+      {activeTab === 'evidence' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div>
+              <h3 className="font-semibold text-white">Retrieved Hybrid Evidence Chunks</h3>
+              <p className="text-xs text-slate-400">Ground truth evidence retrieved across General KB, Academic Papers & Dynamic Web</p>
+            </div>
+            <span className="text-xs font-mono text-emerald-400 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              {result.retrieved_evidence?.length ?? 0} Evidence Passages
+            </span>
+          </div>
+
+          {result.retrieved_evidence && result.retrieved_evidence.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {result.retrieved_evidence.map((ev, idx) => (
+                <div key={idx} className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-0.5 rounded font-mono font-bold text-xs bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                      Citation {ev.citation_id}
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-xs bg-emerald-500/10 text-emerald-400 font-semibold">
+                      Relevance: {ev.relevance_score}
+                    </span>
+                  </div>
+
+                  <h4 className="font-bold text-white text-sm leading-snug">{ev.title}</h4>
+                  <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                    "{ev.text}"
+                  </p>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
+                    <span className="capitalize px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                      Source: {ev.source_type}
+                    </span>
+                    {ev.url && (
+                      <a
+                        href={ev.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-1 text-sky-400 hover:text-sky-300 hover:underline"
+                      >
+                        <span>View Source</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center text-slate-500 rounded-2xl bg-slate-900/50 border border-slate-800">
+              No specific external evidence retrieved for this exploration query.
+            </div>
+          )}
+        </div>
+      )}
     </div>
+
   );
 };

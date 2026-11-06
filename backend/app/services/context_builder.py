@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from app.schemas.pydantic_models import (
     RankedResponse,
     ConflictAnalysisResult,
@@ -11,12 +11,13 @@ class ContextBuilder:
         query: str,
         ranked_candidates: List[RankedResponse],
         conflicts: ConflictAnalysisResult,
-        preferences: Optional[UserPreferenceSchema] = None
+        preferences: Optional[UserPreferenceSchema] = None,
+        evidence_chunks: Optional[List[Dict[str, Any]]] = None
     ) -> str:
         """
         Builds a comprehensive, research-grade structured context for the synthesis LLM.
         Explicitly isolates query, user preferences, candidate evaluations, resource metrics,
-        shared claims, and resolved contradictions.
+        shared claims, resolved contradictions, and authentic retrieved knowledge base evidence.
         """
         divider = "=" * 60
         sections: List[str] = []
@@ -24,7 +25,26 @@ class ContextBuilder:
         # 1. User Query Section
         sections.append(f"{divider}\nUSER QUERY\n{divider}\n{query.strip()}\n")
 
-        # 2. User Preferences Section
+        # 2. Authentic Retrieved Evidence Section (if available)
+        if evidence_chunks:
+            evidence_lines = []
+            for ev in evidence_chunks:
+                cid = ev.get("citation_id", f"[{ev.get('citation_index', 1)}]")
+                title = ev.get("title", "Evidence Source")
+                src = ev.get("source_type", "Knowledge Base")
+                url = ev.get("url", "")
+                url_str = f" ({url})" if url else ""
+                snippet = ev.get("text", "").strip()
+                evidence_lines.append(f"{cid} {title} [Source: {src}{url_str}]:\n\"{snippet}\"\n")
+            
+            sections.append(
+                f"{divider}\nRETRIEVED GROUND TRUTH EVIDENCE (HYBRID RAG)\n{divider}\n"
+                "The following verified knowledge base excerpts must serve as the primary factual ground truth:\n\n"
+                + "\n".join(evidence_lines) + "\n"
+            )
+
+        # 3. User Preferences Section
+
         pref_text = "Standard Balanced Settings (Relevance: 25%, Correctness: 25%, Completeness: 15%, Clarity: 15%, Consistency: 5%, Match: 10%, Conciseness: 5%)"
         if preferences:
             weights = preferences.normalized_quality_weights()
@@ -85,7 +105,9 @@ class ContextBuilder:
             "4. Carefully resolve all flagged contradictions and dismiss unsupported or dubious claims.\n"
             "5. Eliminate duplicated phrases, redundant fluff, and filler.\n"
             "6. Provide a cohesive, elegant, comprehensive, and well-structured answer.\n"
-            "7. CRITICAL: Do NOT mention internal system details, evaluation scores, ranking, candidate model names, or OpenRouter in your final output unless explicitly asked in the query."
+            "7. Ground factual claims using inline bracketed citations (e.g. [1], [2]) corresponding to the retrieved evidence when relevant.\n"
+            "8. CRITICAL: Do NOT mention internal system details, evaluation scores, ranking, candidate model names, or OpenRouter in your final output unless explicitly asked in the query."
+
         )
         sections.append(instructions)
 

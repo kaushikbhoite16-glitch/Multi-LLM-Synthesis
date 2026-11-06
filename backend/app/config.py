@@ -105,5 +105,28 @@ class Settings(BaseSettings):
     # Testing flag: allows test suite to inspect reset tokens without mock bypasses
     TESTING: bool = os.getenv("TESTING", "false").lower() in ("true", "1", "yes")
 
+    # Hybrid RAG & Vector Database Configuration
+    CHROMA_PERSIST_DIR: str = (
+        os.getenv("CHROMA_PERSIST_DIRECTORY")
+        or os.getenv("CHROMA_PERSIST_DIR")
+        or os.path.join(os.path.dirname(os.path.dirname(__file__)), "chroma_db")
+    )
+    EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
+    RAG_CHUNK_SIZE: int = int(os.getenv("RAG_CHUNK_SIZE", "500"))
+    RAG_CHUNK_OVERLAP: int = int(os.getenv("RAG_CHUNK_OVERLAP", "75"))
+    RAG_TOP_K_PER_SOURCE: int = int(os.getenv("RAG_TOP_K_PER_SOURCE", "5"))
+    RAG_RRF_K: int = int(os.getenv("RAG_RRF_K", "60"))
+    RAG_ENABLED: bool = os.getenv("RAG_ENABLED", "true").lower() in ("true", "1", "yes")
+    RAG_ENABLE_RERANKER: bool = os.getenv("RAG_ENABLE_RERANKER", "true").lower() in ("true", "1", "yes")
+    RERANKER_MODEL_NAME: str = os.getenv("RERANKER_MODEL_NAME", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+    TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
+
+    DYNAMIC_WEB_EXPIRATION_HOURS: int = int(os.getenv("DYNAMIC_WEB_EXPIRATION_HOURS", "24"))
+    DOCUMENT_STORAGE_DIR: str = (
+        os.getenv("UPLOAD_DIRECTORY")
+        or os.getenv("DOCUMENT_STORAGE_DIR")
+        or os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "documents")
+    )
+
 settings = Settings()
 

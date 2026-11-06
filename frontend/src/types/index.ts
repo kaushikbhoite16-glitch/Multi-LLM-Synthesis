@@ -77,7 +77,11 @@ export interface RankedResponse {
   latency_ms: number;
   criteria_scores: Record<string, number>;
   reasoning: string;
+  evidence_score?: number;
+  verified_claims?: any[];
+  citations?: string[];
 }
+
 
 export interface ConflictItem {
   claim_a: string;
@@ -108,6 +112,9 @@ export interface SynthesisResult {
   cost: number;
   latency_ms: number;
   status: string;
+  citations?: any[];
+  verified_claims?: any[];
+  factuality_score?: number;
 }
 
 export interface FinalEvaluationResult {
@@ -125,6 +132,37 @@ export interface FinalEvaluationResult {
   best_candidate_model: string;
   best_candidate_score: number;
   improvement_pct: number;
+}
+
+export interface EvidenceChunk {
+  citation_id: string;
+  citation_index: number;
+  chunk_id: string;
+  title: string;
+  text: string;
+  source_type: string;
+  url?: string;
+  relevance_score: number;
+  author?: string;
+  year?: string | number;
+}
+
+export interface RagDocument {
+  id: string;
+  title: string;
+  source_type: string;
+  source_url?: string;
+  retrieved_at?: string;
+  status: string;
+  chunk_count: number;
+}
+
+export interface RagStats {
+  status: string;
+  embedding_model: string;
+  collections: Record<string, number>;
+  dynamic_web_expiration_hours: number;
+  rrf_k: number;
 }
 
 export interface PipelineRunResponse {
@@ -147,7 +185,10 @@ export interface PipelineRunResponse {
   app_version?: string;
   environment?: string;
   trace_id?: string;
+  retrieved_evidence?: EvidenceChunk[];
+  rag_sources_used?: string[];
 }
+
 
 export interface User {
   id: number;

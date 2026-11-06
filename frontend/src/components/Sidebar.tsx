@@ -15,8 +15,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Layers,
-  Sparkles
+  Sparkles,
+  Database
 } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
@@ -48,8 +50,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = [
     { id: 'query', label: 'New Exploration', icon: MessageSquarePlus, badge: 'AI' },
     { id: 'history', label: 'Question History', icon: History },
+    { id: 'knowledge-base', label: 'Knowledge Base', icon: Database, badge: 'RAG' },
     { id: 'dashboard', label: 'System Overview', icon: LayoutDashboard },
     { id: 'comparison', label: 'Model Benchmarking', icon: Scale },
+
     { id: 'analytics', label: 'Analytics & Pareto', icon: TrendingUp },
     { id: 'experiments', label: 'Hypothesis Suite', icon: FlaskConical },
     { id: 'models', label: 'Model Catalog', icon: Cpu },

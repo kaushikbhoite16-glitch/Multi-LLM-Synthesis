@@ -1,12 +1,15 @@
 import time
 import asyncio
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from app.schemas.pydantic_models import (
     SynthesisResult,
     UserPreferenceSchema
 )
 from app.services.openrouter_service import OpenRouterService, classify_query_topic
+from app.rag.claim_extractor import claim_extractor
+from app.rag.evidence_verifier import evidence_verifier
 from app.utils.logger import log_stage, logger
+
 
 SYNTHESIZER_SYSTEM_PROMPT = """You are the master synthesis engine of a cutting-edge Multi-LLM research architecture.
 Your objective is to produce a single, user-tailored, authoritative, and coherent response based on the structured context provided.
@@ -29,10 +32,12 @@ class SynthesizerService:
         structured_context: str,
         synthesis_model: str = "openai/gpt-4o-mini",
         preferences: Optional[UserPreferenceSchema] = None,
+        evidence_chunks: Optional[List[Dict[str, Any]]] = None,
         force_mock: bool = False
     ) -> SynthesisResult:
         """
-        Executes final adaptive answer synthesis over the structured multi-candidate context.
+        Executes final adaptive answer synthesis over the structured multi-candidate context
+        grounded with authentic retrieved evidence.
         """
         log_stage("synthesis", f"Starting adaptive synthesis with {synthesis_model}", query_id=query_id)
         start_time = time.perf_counter()
@@ -61,6 +66,16 @@ class SynthesizerService:
                         cost=f"${resp.cost:.6f}",
                         latency=f"{resp.latency_ms}ms"
                     )
+
+                    # Post-synthesis evidence verification
+                    verified_claims = []
+                    factuality_score = None
+                    if evidence_chunks:
+                        claims = claim_extractor.extract_claims(resp.response_text)
+                        verified_claims = evidence_verifier.verify_claims(claims, evidence_chunks)
+                        supported = sum(1 for c in verified_claims if c["status"] == "SUPPORTED")
+                        factuality_score = round((supported / max(1, len(verified_claims))) * 10.0, 2)
+
                     return SynthesisResult(
                         query_id=query_id,
                         synthesis_model=synthesis_model,
@@ -73,7 +88,10 @@ class SynthesizerService:
                         latency_ms=resp.latency_ms,
                         status="success",
                         is_fallback=False,
-                        execution_mode="live"
+                        execution_mode="live",
+                        citations=evidence_chunks or [],
+                        verified_claims=verified_claims,
+                        factuality_score=factuality_score
                     )
                 elif resp.is_fallback:
                     logger.warning(f"Synthesis model {synthesis_model} fell back to simulation. Generating high-fidelity adaptive synthesis.")
@@ -88,6 +106,7 @@ class SynthesizerService:
             structured_context=structured_context,
             synthesis_model=synthesis_model,
             start_time=start_time,
+            evidence_chunks=evidence_chunks,
             is_fallback=is_fallback
         )
 
@@ -98,6 +117,7 @@ class SynthesizerService:
         structured_context: str,
         synthesis_model: str,
         start_time: float,
+        evidence_chunks: Optional[List[Dict[str, Any]]] = None,
         is_fallback: bool = False
     ) -> SynthesisResult:
         await asyncio.sleep(0.4)
@@ -324,6 +344,26 @@ class SynthesizerService:
             )
             in_tokens, out_tokens = 280, 260
 
+        # Append authentic retrieved evidence references if available
+        verified_claims = []
+        factuality_score = None
+        if evidence_chunks:
+            ref_lines = ["\n\n---\n\n### References & Verified Ground Truth\n"]
+            for ev in evidence_chunks:
+                cid = ev.get("citation_id", f"[{ev.get('citation_index', 1)}]")
+                title = ev.get("title", "Evidence Source")
+                src = ev.get("source_type", "Knowledge Base")
+                url = ev.get("url", "")
+                url_str = f" - [{url}]({url})" if url else ""
+                ref_lines.append(f"- **{cid} {title}** ({src.replace('_', ' ').capitalize()}){url_str}")
+            text += "\n".join(ref_lines)
+
+            # Verification
+            claims = claim_extractor.extract_claims(text)
+            verified_claims = evidence_verifier.verify_claims(claims, evidence_chunks)
+            supported = sum(1 for c in verified_claims if c["status"] == "SUPPORTED")
+            factuality_score = round((supported / max(1, len(verified_claims))) * 10.0, 2)
+
         total_tokens = in_tokens + out_tokens
         cost = 0.0 if is_fallback else self.openrouter.calculate_cost(synthesis_model, in_tokens, out_tokens)
 
@@ -339,5 +379,9 @@ class SynthesizerService:
             latency_ms=elapsed_ms,
             status="mock_fallback" if is_fallback else "success",
             is_fallback=is_fallback,
-            execution_mode="mock_fallback" if is_fallback else "simulation"
+            execution_mode="mock_fallback" if is_fallback else "simulation",
+            citations=evidence_chunks or [],
+            verified_claims=verified_claims,
+            factuality_score=factuality_score
         )
+

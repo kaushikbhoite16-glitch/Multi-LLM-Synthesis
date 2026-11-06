@@ -229,3 +229,56 @@ class HumanEvaluation(Base):
     preference_match_score = Column(Integer, default=5)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+# =========================================================================
+# Hybrid RAG & Knowledge Base Entities
+# =========================================================================
+
+class Document(Base):
+    __tablename__ = "documents"
+
+    id = Column(String(100), primary_key=True, index=True)
+    title = Column(String(500), nullable=False)
+    source_type = Column(String(50), nullable=False, index=True)  # "general", "academic", "web"
+    source_url = Column(String(1000), nullable=True)
+    content_hash = Column(String(64), nullable=True, index=True)
+    publication_date = Column(String(50), nullable=True)
+    retrieved_at = Column(DateTime, default=datetime.datetime.utcnow)
+    doi = Column(String(255), nullable=True)
+    authors = Column(JSON, nullable=True)
+    venue = Column(String(255), nullable=True)
+    file_path = Column(String(1000), nullable=True)
+    status = Column(String(50), default="active")  # "active", "temporary", "archived"
+    expires_at = Column(DateTime, nullable=True)
+    metadata_extra = Column(JSON, nullable=True)
+
+    chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
+
+
+class DocumentChunk(Base):
+    __tablename__ = "document_chunks"
+
+    id = Column(String(150), primary_key=True, index=True)
+    document_id = Column(String(100), ForeignKey("documents.id"), nullable=False, index=True)
+    chunk_index = Column(Integer, nullable=False)
+    collection_name = Column(String(100), nullable=False, index=True)
+    chromadb_id = Column(String(150), nullable=False, index=True)
+    text_snippet = Column(Text, nullable=False)
+    token_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    document = relationship("Document", back_populates="chunks")
+
+
+class RetrievalLog(Base):
+    __tablename__ = "retrieval_logs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    query_id = Column(Integer, ForeignKey("queries.id"), nullable=True, index=True)
+    query_text = Column(Text, nullable=False)
+    selected_sources = Column(JSON, nullable=True)
+    retrieved_chunk_ids = Column(JSON, nullable=True)
+    scores = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+

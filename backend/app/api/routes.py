@@ -2,7 +2,7 @@ import csv
 import io
 import json
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query as FastAPIQuery, Response
+from fastapi import APIRouter, Depends, HTTPException, Query as FastAPIQuery, Response, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 
@@ -47,7 +47,10 @@ from app.models.entities import (
     FinalEvaluation as FinalEvaluationEntity,
     Experiment as ExperimentEntity,
     ExperimentResult as ExpResultEntity,
-    HumanEvaluation as HumanEvalEntity
+    HumanEvaluation as HumanEvalEntity,
+    Document as DocumentEntity,
+    DocumentChunk as DocumentChunkEntity
+
 )
 from app.utils.security import hash_password, verify_password, create_access_token
 from app.utils.logger import logger
@@ -1069,4 +1072,352 @@ async def admin_toggle_user_status(
         await db.commit()
 
     return {"message": f"User status updated successfully.", "user_id": user.id, "is_active": user.is_active}
+
+
+# ==========================================
+# Hybrid RAG & Knowledge Base Endpoints
+# ==========================================
+
+@router.get("/rag/stats")
+async def get_rag_stats():
+    """Returns vector database collection stats, pruning status, and embedding configuration."""
+    from app.rag.vector_store import vector_store
+    from app.config import settings
+    return {
+        "status": "healthy",
+        "embedding_model": settings.EMBEDDING_MODEL_NAME,
+        "collections": vector_store.get_collection_stats(),
+        "dynamic_web_expiration_hours": settings.DYNAMIC_WEB_EXPIRATION_HOURS,
+        "rrf_k": settings.RAG_RRF_K
+    }
+
+
+@router.post("/rag/retrieve")
+async def retrieve_rag_evidence(payload: Dict[str, Any]):
+    """
+    Executes hybrid retrieval (Dense + Sparse BM25 + Web) across selected sources.
+    Payload: {"query": "what is for loop", "sources": ["general", "academic"], "top_k": 5}
+    """
+    from app.rag.hybrid_retriever import hybrid_retriever
+    query = payload.get("query", "").strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="Query cannot be empty.")
+    
+    sources = payload.get("sources")
+    top_k = int(payload.get("top_k", 5))
+
+    results = await hybrid_retriever.retrieve_evidence(query=query, sources=sources, top_k=top_k)
+    return {
+        "query": query,
+        "count": len(results),
+        "evidence": results
+    }
+
+
+@router.post("/rag/ingest/text")
+async def ingest_rag_text(
+    payload: Dict[str, Any],
+    user: Optional[UserEntity] = Depends(get_optional_user)
+):
+    """
+    Ingests custom text into general or academic knowledge base.
+    Payload: {"text": "...", "title": "...", "collection": "general" | "academic", "url": "..."}
+    """
+    from app.rag.sources.general_kb import general_kb
+    from app.rag.sources.academic_kb import academic_kb
+
+    text = payload.get("text", "").strip()
+    title = payload.get("title", "").strip()
+    collection = payload.get("collection", "general").lower()
+    url = payload.get("url", "").strip()
+
+    if not text or not title:
+        raise HTTPException(status_code=400, detail="Text and title are required.")
+
+    if collection == "academic":
+        res = academic_kb.ingest_paper(
+            title=title,
+            abstract=text[:300],
+            authors=payload.get("authors", "Contributed"),
+            year=int(payload.get("year", 2026)),
+            full_text=text,
+            url=url
+        )
+    else:
+        res = general_kb.ingest_text(
+            text=text,
+            title=title,
+            category=payload.get("category", "general_knowledge"),
+            source_url=url
+        )
+
+    return {"message": "Document ingested successfully into knowledge base.", "details": res}
+
+
+@router.post("/rag/arxiv")
+async def ingest_arxiv_papers(payload: Dict[str, Any]):
+    """
+    Queries the arXiv API and ingests matching preprints into the academic knowledge base.
+    Payload: {"query": "Retrieval Augmented Generation", "max_results": 3}
+    """
+    from app.rag.sources.academic_kb import academic_kb
+    query = payload.get("query", "").strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="Search query is required.")
+    max_results = int(payload.get("max_results", 3))
+
+    ingested = await academic_kb.fetch_and_ingest_arxiv(search_query=query, max_results=max_results)
+    return {
+        "message": f"Successfully indexed {len(ingested)} papers from arXiv.",
+        "papers": ingested
+    }
+
+
+@router.post("/rag/prune")
+async def prune_expired_web_records():
+    """Explicitly triggers pruning of expired web cache entries."""
+    from app.rag.vector_store import vector_store
+    pruned_count = vector_store.prune_expired_web_records()
+    return {
+        "message": f"Pruned {pruned_count} expired records from dynamic web cache.",
+        "pruned_count": pruned_count
+    }
+
+
+@router.post("/rag/documents/upload")
+async def upload_rag_document(
+    file: UploadFile = File(...),
+    title: Optional[str] = Form(None),
+    category: Optional[str] = Form("general_knowledge"),
+    collection: Optional[str] = Form("general"),
+    db: AsyncSession = Depends(get_session),
+    user: Optional[UserEntity] = Depends(get_optional_user)
+):
+    """
+    Uploads a PDF, TXT, or HTML document, stores original file,
+    extracts text, chunks, computes embeddings, and persists metadata in PostgreSQL & ChromaDB.
+    """
+    import os
+    import shutil
+    from app.config import settings
+    from app.rag.document_loader import document_loader
+    from app.rag.chunking import SemanticChunker
+    from app.rag.vector_store import vector_store, GENERAL_COLLECTION, ACADEMIC_COLLECTION
+    from app.rag.bm25_retriever import bm25_retriever
+
+    os.makedirs(settings.DOCUMENT_STORAGE_DIR, exist_ok=True)
+    filename = file.filename or "uploaded_document.txt"
+    safe_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
+    saved_path = os.path.join(settings.DOCUMENT_STORAGE_DIR, safe_filename)
+
+    # Save physical file
+    with open(saved_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    # Extract text
+    doc_data = document_loader.load_file(saved_path)
+    text = doc_data.get("text", "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Document contains no readable text.")
+
+    content_hash = doc_data.get("metadata", {}).get("content_hash", "")
+    
+    # Check for duplicate document
+    if content_hash:
+        existing = await db.execute(select(DocumentEntity).where(DocumentEntity.content_hash == content_hash))
+        existing_doc = existing.scalar_one_or_none()
+        if existing_doc:
+            return {
+                "message": f"Document already indexed as '{existing_doc.title}'. Duplicate prevented.",
+                "document_id": existing_doc.id,
+                "title": existing_doc.title,
+                "status": "already_indexed"
+            }
+
+    doc_id = f"doc_{uuid.uuid4().hex[:10]}"
+    doc_title = title or doc_data.get("metadata", {}).get("title") or filename
+    target_collection = ACADEMIC_COLLECTION if collection.lower() == "academic" else GENERAL_COLLECTION
+
+    # Chunking
+    chunker = SemanticChunker(chunk_size=settings.RAG_CHUNK_SIZE, chunk_overlap=settings.RAG_CHUNK_OVERLAP)
+    base_meta = {
+        "document_id": doc_id,
+        "title": doc_title,
+        "source_type": "academic" if collection.lower() == "academic" else "general",
+        "category": category,
+        "url": saved_path
+    }
+    chunks = chunker.chunk_document(doc_id, text, base_meta)
+    if not chunks:
+        raise HTTPException(status_code=400, detail="Failed to generate chunks from document.")
+
+    # ChromaDB indexing
+    chunk_ids = [c["chunk_id"] for c in chunks]
+    documents = [c["text"] for c in chunks]
+    metadatas = [c["metadata"] for c in chunks]
+    vector_store.add_chunks(target_collection, chunk_ids, documents, metadatas)
+    bm25_retriever.index_collection(target_collection)
+
+    # PostgreSQL Relational Persistence
+    doc_entity = DocumentEntity(
+        id=doc_id,
+        title=doc_title,
+        source_type="academic" if collection.lower() == "academic" else "general",
+        source_url=saved_path,
+        content_hash=content_hash,
+        file_path=saved_path,
+        status="active"
+    )
+    db.add(doc_entity)
+    await db.flush()
+
+    for idx, c in enumerate(chunks):
+        c_entity = DocumentChunkEntity(
+            id=c["chunk_id"],
+            document_id=doc_id,
+            chunk_index=idx + 1,
+            collection_name=target_collection,
+            chromadb_id=c["chunk_id"],
+            text_snippet=c["text"][:500],
+            token_count=c["metadata"].get("token_count", 0)
+        )
+        db.add(c_entity)
+
+    await db.commit()
+
+    return {
+        "message": f"Successfully indexed '{doc_title}' ({len(chunks)} chunks).",
+        "document_id": doc_id,
+        "title": doc_title,
+        "chunk_count": len(chunks),
+        "collection": target_collection,
+        "status": "active"
+    }
+
+
+@router.get("/rag/documents")
+async def list_rag_documents(db: AsyncSession = Depends(get_session)):
+    """Lists all indexed documents across the knowledge base with chunk counts."""
+    from sqlalchemy import func
+    res = await db.execute(
+        select(
+            DocumentEntity.id,
+            DocumentEntity.title,
+            DocumentEntity.source_type,
+            DocumentEntity.source_url,
+            DocumentEntity.retrieved_at,
+            DocumentEntity.status,
+            func.count(DocumentChunkEntity.id).label("chunk_count")
+        )
+        .outerjoin(DocumentChunkEntity, DocumentEntity.id == DocumentChunkEntity.document_id)
+        .group_by(DocumentEntity.id)
+        .order_by(desc(DocumentEntity.retrieved_at))
+    )
+    rows = res.all()
+    documents = []
+    for r in rows:
+        documents.append({
+            "id": r.id,
+            "title": r.title,
+            "source_type": r.source_type,
+            "source_url": r.source_url,
+            "retrieved_at": str(r.retrieved_at) if r.retrieved_at else None,
+            "status": r.status,
+            "chunk_count": r.chunk_count or 0
+        })
+    return {"count": len(documents), "documents": documents}
+
+
+@router.delete("/rag/documents/{document_id}")
+async def delete_rag_document(
+    document_id: str,
+    db: AsyncSession = Depends(get_session),
+    user: Optional[UserEntity] = Depends(get_optional_user)
+):
+    """
+    Deletes a document from both PostgreSQL metadata and ChromaDB vector store.
+    """
+    from app.rag.vector_store import vector_store, GENERAL_COLLECTION, ACADEMIC_COLLECTION
+    from app.rag.bm25_retriever import bm25_retriever
+
+    # 1. Clean from ChromaDB collections
+    vector_store.delete_document_chunks(GENERAL_COLLECTION, document_id)
+    vector_store.delete_document_chunks(ACADEMIC_COLLECTION, document_id)
+    bm25_retriever.index_collection(GENERAL_COLLECTION)
+    bm25_retriever.index_collection(ACADEMIC_COLLECTION)
+
+    # 2. Delete from database
+    doc_res = await db.execute(select(DocumentEntity).where(DocumentEntity.id == document_id))
+    doc_obj = doc_res.scalar_one_or_none()
+    if doc_obj:
+        await db.delete(doc_obj)
+        await db.commit()
+        return {
+            "status": "deleted",
+            "document_id": document_id,
+            "message": f"Document '{document_id}' successfully deleted from vector store and database."
+        }
+    
+    return {
+        "status": "deleted",
+        "document_id": document_id,
+        "message": f"Document '{document_id}' purged from vector store."
+    }
+
+
+@router.post("/rag/academic/search")
+async def search_and_ingest_academic_papers(
+    payload: Dict[str, Any],
+    db: AsyncSession = Depends(get_session)
+):
+    """
+    Searches across arXiv, OpenAlex, Crossref, and Semantic Scholar,
+    indexes matching papers into academic_knowledge, and records metadata in PostgreSQL.
+    Payload: {"query": "Retrieval Augmented Generation", "providers": ["arxiv", "openalex", "crossref", "semantic_scholar"], "max_results_per_provider": 2}
+    """
+    from app.rag.sources.academic_kb import academic_kb
+    from app.rag.vector_store import ACADEMIC_COLLECTION
+
+    query = payload.get("query", "").strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="Search query is required.")
+    
+    providers = payload.get("providers")
+    max_per_prov = int(payload.get("max_results_per_provider", 2))
+
+    ingest_result = await academic_kb.fetch_and_ingest_all_providers(
+        search_query=query,
+        providers=providers,
+        max_results_per_provider=max_per_prov
+    )
+
+    # Record ingested papers into PostgreSQL
+    for prov_name, papers in ingest_result.get("papers", {}).items():
+        for p in papers:
+            doc_id = p.get("document_id")
+            if not doc_id:
+                continue
+            
+            existing = await db.execute(select(DocumentEntity).where(DocumentEntity.id == doc_id))
+            if not existing.scalar_one_or_none():
+                doc_entity = DocumentEntity(
+                    id=doc_id,
+                    title=p.get("title", "Academic Paper"),
+                    source_type="academic",
+                    source_url=p.get("url", ""),
+                    doi=p.get("doi", ""),
+                    authors=[p.get("authors", "")],
+                    status="active"
+                )
+                db.add(doc_entity)
+    
+    try:
+        await db.commit()
+    except Exception as e:
+        logger.warning(f"Error persisting academic papers to PostgreSQL: {e}")
+        await db.rollback()
+
+    return ingest_result
+
+
 

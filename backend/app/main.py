@@ -54,8 +54,21 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Administrator auto-seed notice: {e}")
 
+    # Initialize Hybrid RAG vector store and seed collections if empty
+    try:
+        from app.rag.seed_data import ensure_seed_data, sync_seed_documents_to_db
+        ensure_seed_data()
+        async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        async with async_session() as db:
+            await sync_seed_documents_to_db(db)
+        logger.info("Hybrid RAG vector store & knowledge bases verified.")
+    except Exception as e:
+        logger.warning(f"RAG seed data initialization notice: {e}")
+
+
     logger.info(f"Database schema initialized successfully. Mock mode: {settings.MOCK_MODE or not bool(settings.OPENROUTER_API_KEY)}")
     yield
+
     await engine.dispose()
 
 app = FastAPI(
@@ -65,16 +78,35 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Enable CORS for frontend Vite development server
+# Enable CORS for frontend and deployment domains
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://multi-llm-synthesis-web.vercel.app",
+        "https://multi-llm-synthesis.onrender.com",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:8000",
+    ],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(router, prefix=settings.API_V1_STR)
+
+@app.get("/")
+async def root():
+    return {
+        "service": "Multi-LLM Response Evaluation and Adaptive Answer Synthesis API",
+        "status": "operational",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/health",
+        "rag_stats": f"{settings.API_V1_STR}/rag/stats"
+    }
 
 @app.get("/health")
 async def healthcheck():
@@ -87,4 +119,5 @@ async def healthcheck():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=False)
