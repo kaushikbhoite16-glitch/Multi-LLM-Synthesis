@@ -26,7 +26,14 @@ class CrossEncoderReranker:
             # Fall back to native interaction cross-scoring
             self._cross_encoder_model = None
 
-    def calculate_interaction_score(self, query: str, chunk_text: str, chunk_meta: Optional[Dict[str, Any]] = None) -> float:
+    def calculate_interaction_score(
+        self,
+        query: str,
+        chunk_text: str,
+        chunk_meta: Optional[Dict[str, Any]] = None,
+        chunk_score: Optional[float] = None,
+        q_emb: Optional[List[float]] = None
+    ) -> float:
         """
         Computes calibrated cross-encoder interaction score between query and chunk.
         Incorporates dense semantic interaction, exact term proximity, title alignment, and query coverage.
@@ -45,10 +52,16 @@ class CrossEncoderReranker:
         matched_tokens = set(query_tokens) & set(doc_tokens)
         term_coverage = len(matched_tokens) / len(set(query_tokens))
 
-        # 2. Dense Semantic Cross-Similarity
-        q_emb = embedding_service.embed_query(query)
-        d_emb = embedding_service.embed_query(chunk_text[:800])
-        dense_sim = max(0.0, float(embedding_service.cosine_similarity(q_emb, d_emb)))
+        # 2. Dense Semantic Cross-Similarity (reuse precomputed score if available to avoid redundant ONNX calls)
+        if chunk_score is not None and chunk_score > 0.0:
+            dense_sim = min(1.0, max(0.0, float(chunk_score)))
+        elif q_emb is not None:
+            d_emb = embedding_service.embed_query(chunk_text[:800])
+            dense_sim = max(0.0, float(embedding_service.cosine_similarity(q_emb, d_emb)))
+        else:
+            q_emb_local = embedding_service.embed_query(query)
+            d_emb = embedding_service.embed_query(chunk_text[:800])
+            dense_sim = max(0.0, float(embedding_service.cosine_similarity(q_emb_local, d_emb)))
 
         # 3. Title / Section Heading Cross-Match
         title_boost = 0.0
@@ -59,7 +72,6 @@ class CrossEncoderReranker:
                 title_boost = 0.15
 
         # 4. Proximity / Window Density
-        # Checks if query terms appear in close proximity within the document
         proximity_score = 0.0
         if len(query_tokens) >= 2 and all(t in doc_lower for t in query_tokens[:2]):
             proximity_score = 0.10
@@ -111,10 +123,18 @@ class CrossEncoderReranker:
 
         # Interaction Cross-Scorer (executed if neural model is not active)
         if not reranked_items:
+            # Precompute query embedding once for all candidate chunks
+            q_emb = embedding_service.embed_query(query) if query else None
             for c in chunks:
                 c_copy = dict(c)
                 meta = c_copy.get("metadata", {})
-                score = self.calculate_interaction_score(query, c_copy.get("text", ""), meta)
+                score = self.calculate_interaction_score(
+                    query=query,
+                    chunk_text=c_copy.get("text", ""),
+                    chunk_meta=meta,
+                    chunk_score=c_copy.get("score"),
+                    q_emb=q_emb
+                )
                 c_copy["rerank_score"] = score
                 reranked_items.append(c_copy)
 
